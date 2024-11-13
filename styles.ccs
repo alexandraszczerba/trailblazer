@@ -1,1 +1,45 @@
+/* Style for the map container */
+#map {
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    margin: 0;
+    padding: 0;
+}
 
+/* Styling for custom buttons */
+.custom-button {
+    position: absolute;
+    background-color: rgba(34, 139, 34, 0.7); /* Greenish color with transparency */
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    z-index: 1000; /* Ensure buttons appear above the map */
+}
+
+/* Button hover effect */
+.custom-button:hover {
+    background-color: rgba(34, 139, 34, 0.9);
+}
+
+/* Positioning for buttons */
+#back-button {
+    top: 20px;
+    left: 20px;
+}
+
+#make-trail-button {
+    top: 20px;
+    right: 20px;
+}
+
+/* Example marker style */
+.custom-marker-icon {
+    background-color: rgba(50, 100, 50, 0.8); /* Custom marker color */
+    width: 20px;
+    height: 30px;
+    border-radius: 50%;
+}
