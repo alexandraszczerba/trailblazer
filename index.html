@@ -5,22 +5,61 @@
   <!-- Include the CesiumJS JavaScript and CSS files -->
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
   <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Main Cesium Map</title>
+  <style>
+    #trailInfoBox {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
+
+    #trailInfoBox h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #trailPhotos img {
+      width: 80px;
+      height: 80px;
+      border-radius: 5px;
+    }
+
+    #createTrailBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 10px 15px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <button id="createTrailBtn" onclick="window.location.href='maketrail.html'">Create Your Own Trail</button>
-  <div id="cesiumContainer"></div>
+  <button id="createTrailBtn">Create Your Own Trail</button>
+  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
+  <div id="trailInfoBox">
+    <h3 id="trailName"></h3>
+    <p id="trailDetails"></p>
+    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
+  </div>
   <script type="module">
-    // Your access token can be found at: https://ion.cesium.com/tokens.
-    // Replace `your_access_token` with your Cesium ion access token.
-
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
     const viewer = new Cesium.Viewer('cesiumContainer', {
       terrain: Cesium.Terrain.fromWorldTerrain(),
-    });    
+    });
 
-    // Fly the camera to San Francisco at the given longitude, latitude, and height.
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
       orientation: {
@@ -28,36 +67,59 @@
         pitch: Cesium.Math.toRadians(-15.0),
       }
     });
-    // Define waypoints for popular trailheads
+
+    const trailInformation = {
+      "Icehouse Canyon Trailhead": {
+        difficulty: "8/10",
+        distance: "8 miles",
+        maxElevation: "9399 feet",
+        photos: ["photo1.jpg", "photo2.jpg", "photo3.jpg"],
+        notes: "Windy/Cold weather. Be cautious of ice and snow during winter."
+      },
+      "Baldy Bowl Trailhead": {
+        difficulty: "6/10",
+        distance: "7 miles",
+        maxElevation: "8600 feet",
+        photos: ["baldy1.jpg", "baldy2.jpg"],
+        notes: "Great trail for summer hikes."
+      },
+      "Devil's Backbone Trailhead": {
+        difficulty: "10/10",
+        distance: "13.1 miles",
+        maxElevation: "10200 feet",
+        photos: ["backbone1.jpg", "backbone2.jpg"],
+        notes: "Be super cautious when hiking. Steep drops with recent reports of casualities."
+      }
+    };
+
     const trailheads = [
       {
-          name: "Baldy Bowl Trailhead",
-          position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050)
+        name: "Icehouse Canyon Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500)
       },
       {
-          name: "Devil's Backbone Trailhead",
-          position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050)
+        name: "Baldy Bowl Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050)
+      },
+      {
+        name: "Devil's Backbone Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050)
       },
       {
         name: "Manker Campground Trailhead",
         position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900)
-      },
-      {
-        name: "Icehouse Canyon Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500)
       }
     ];
 
-    // Define a trail
     const trails = [
       {
-          name: "Baldy Bowl Trail",
-          path: [
-              Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 2100),
-              Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
-              Cesium.Cartesian3.fromDegrees(-117.6390, 34.2891, 2400)
-          ],
-          color: Cesium.Color.RED
+        name: "Baldy Bowl Trail",
+        path: [
+          Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 2100),
+          Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
+          Cesium.Cartesian3.fromDegrees(-117.6390, 34.2891, 2400)
+        ],
+        color: Cesium.Color.RED
       },
       {
         name: "Devil's Backbone to Mount Baldy Summit",
@@ -69,10 +131,9 @@
       }
     ];
 
-    // Function to add trailheads as waypoints
     function addWaypoints(waypoints) {
       waypoints.forEach(waypoint => {
-        viewer.entities.add({
+        const entity = viewer.entities.add({
           name: waypoint.name,
           position: waypoint.position,
           point: {
@@ -90,10 +151,32 @@
             pixelOffset: new Cesium.Cartesian2(0, -10)
           }
         });
+
+        entity.description = new Cesium.CallbackProperty(() => {
+          const info = trailInformation[waypoint.name];
+          if (info) {
+            document.getElementById('trailInfoBox').style.display = 'block';
+            document.getElementById('trailName').innerText = waypoint.name;
+            document.getElementById('trailDetails').innerHTML = `
+              Difficulty: ${info.difficulty}<br>
+              Distance: ${info.distance}<br>
+              Max Elevation: ${info.maxElevation}<br>
+              Notes: ${info.notes}
+            `;
+
+            const photoContainer = document.getElementById('trailPhotos');
+            photoContainer.innerHTML = '';
+            info.photos.forEach(photo => {
+              const img = document.createElement('img');
+              img.src = photo;
+              img.alt = waypoint.name;
+              photoContainer.appendChild(img);
+            });
+          }
+        });
       });
     }
 
-    // Function to draw trails
     function addTrails(trails) {
       trails.forEach(trail => {
         viewer.entities.add({
@@ -102,89 +185,69 @@
             positions: trail.path,
             width: 5,
             material: trail.color,
-            clampToGround: true // Ensures the line clings to the terrain
+            clampToGround: true
           }
         });
       });
     }
 
-    // Add waypoints and trails to the viewer
     addWaypoints(trailheads);
     addTrails(trails);
 
+    viewer.scene.canvas.addEventListener('click', function () {
+      document.getElementById('trailInfoBox').style.display = 'none';
+    });
 
-    document.getElementById('createTrailBtn').addEventListener('click', function() {
-  createTrail();
-});
+    document.getElementById('createTrailBtn').addEventListener('click', function () {
+      createTrail();
+    });
 
-let activeTrailPoints = [];
-let activePolyline = null;
+    let activeTrailPoints = [];
+    let activePolyline = null;
 
-function createTrail() {
-  if (activePolyline) {
-    viewer.entities.remove(activePolyline);
-    activeTrailPoints = [];
-  }
-
-  const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-  handler.setInputAction(function(click) {
-    const earthPosition = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
-    if (Cesium.defined(earthPosition)) {
-      activeTrailPoints.push(earthPosition);
-
-      if (activeTrailPoints.length === 1) {
-        viewer.entities.add({
-          position: earthPosition,
-          point: {
-            pixelSize: 10,
-            color: Cesium.Color.YELLOW
-          }
-        });
-      } else {
-        if (activePolyline) {
-          viewer.entities.remove(activePolyline);
-        }
-        activePolyline = viewer.entities.add({
-          polyline: {
-            positions: activeTrailPoints,
-            width: 5,
-            material: Cesium.Color.YELLOW
-          }
-        });
+    function createTrail() {
+      if (activePolyline) {
+        viewer.entities.remove(activePolyline);
+        activeTrailPoints = [];
       }
+
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+      handler.setInputAction(function (click) {
+        const earthPosition = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+        if (Cesium.defined(earthPosition)) {
+          activeTrailPoints.push(earthPosition);
+
+          if (activeTrailPoints.length === 1) {
+            viewer.entities.add({
+              position: earthPosition,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW
+              }
+            });
+          } else {
+            if (activePolyline) {
+              viewer.entities.remove(activePolyline);
+            }
+            activePolyline = viewer.entities.add({
+              polyline: {
+                positions: activeTrailPoints,
+                width: 5,
+                material: Cesium.Color.YELLOW
+              }
+            });
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      handler.setInputAction(function () {
+        handler.destroy();
+      }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
-  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-  // Stop adding points on a double-click
-  handler.setInputAction(function() {
-    handler.destroy();
-  }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-}
-
-
-    // Optionally, add Cesium OSM Buildings, a global 3D buildings layer.
-    // const buildingTileset = await Cesium.createOsmBuildingsAsync();
-    // viewer.scene.primitives.add(buildingTileset); 
     // Add Cesium OSM Buildings, a global 3D buildings layer.
     const buildingTileset = await Cesium.createOsmBuildingsAsync();
-    viewer.scene.primitives.add(buildingTileset);   
+    viewer.scene.primitives.add(buildingTileset);
   </script>
-</div>
 </body>
-
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Main Cesium Map</title>
-  <!-- Include your styles and scripts as needed -->
-</head>
-<body>
-  <!-- Add a link to the globe page -->
-  <nav>
-    <a href="homepage.html">Go to Home Page</a>
-  </nav>
-
-  <div id="cesiumContainer"></div>
-  <!-- Your existing Cesium code here -->
-
 </html>
