@@ -1,7 +1,7 @@
-import { Cesium } from 'https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js';
+// Ensure CesiumJS is loaded
+Cesium.Ion.defaultAccessToken = 'your_access_token_here';
 
-Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
-
+// Initialize the Cesium Viewer
 const viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain(),
     animation: false,
@@ -10,19 +10,28 @@ const viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker: false
 });
 
-// Variables to keep track of points
-let activePoints = [];
-let maxPoints = 5;
+// Fly to an initial location (Mt. Baldy)
+viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+    orientation: {
+        heading: Cesium.Math.toRadians(0.0),
+        pitch: Cesium.Math.toRadians(-15.0),
+        roll: 0.0
+    }
+});
 
-// Create a handler for user interactions
-const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+// Variables to keep track of points
+let points = [];
 
 // Info box to display coordinates and elevation
 const infoBox = document.getElementById('infoBox');
 
+// Create a handler for user interactions
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
 handler.setInputAction(function (click) {
-    if (activePoints.length >= maxPoints) {
-        alert(`You have reached the maximum number of points (${maxPoints}).`);
+    if (points.length >= 5) {
+        alert('You can only place up to 5 points.');
         return;
     }
 
@@ -39,14 +48,14 @@ handler.setInputAction(function (click) {
             .then(([updatedCartographic]) => {
                 const elevation = updatedCartographic.height.toFixed(2);
 
-                // Display the coordinates and elevation
-                infoBox.innerHTML = `Point ${activePoints.length + 1}:<br>
+                // Update the info box with coordinates and elevation
+                infoBox.innerHTML = `Point ${points.length + 1}:<br>
                     Longitude: ${longitude}°<br>
                     Latitude: ${latitude}°<br>
                     Elevation: ${elevation} m`;
 
                 // Add the point to the map
-                activePoints.push(viewer.entities.add({
+                points.push(viewer.entities.add({
                     position: earthPosition,
                     point: {
                         pixelSize: 10,
@@ -55,7 +64,7 @@ handler.setInputAction(function (click) {
                         outlineWidth: 2
                     },
                     label: {
-                        text: `Point ${activePoints.length}`,
+                        text: `Point ${points.length + 1}`,
                         font: '14pt sans-serif',
                         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
                         outlineWidth: 2,
