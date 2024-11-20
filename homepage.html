@@ -1,107 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Trailblazer</title>
-    <!-- Include Google Fonts for better typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* Reset margins and paddings */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <meta charset="utf-8">
+    <title>Trailblazer</title>
+    <!-- Include Google Fonts for better typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        body, html {
-            width: 100%;
-            height: 100%;
-            font-family: 'Roboto', sans-serif;
-            background-color: #222;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            background-color: #222;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        #home-container {
-            text-align: center;
-            position: relative;
-        }
+        #home-container {
+            text-align: center;
+            position: relative;
+            max-width: 400px;
+        }
 
-        #home-header {
-            font-size: 48px;
-            margin-bottom: 30px;
-        }
+        #home-header {
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
 
-        #search-bar {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+        #search-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
 
-        #search-bar label {
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
+        #search-bar label {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
 
-        #dropdown {
-            width: 350px;
-            padding: 15px;
-            font-size: 18px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
+        #dropdown {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
 
-        #globe-icon {
-            width: 200px;
-            height: 200px;
-            margin-bottom: 30px;
-        }
+        #globe-icon {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 30px;
+            animation: spin 10s linear infinite; /* Adding spinning animation */
+        }
 
-        button {
-            padding: 15px 30px;
-            font-size: 20px;
-            background-color: forestgreen;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
-        button:hover {
-            background-color: darkgreen;
-        }
-    </style>
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: forestgreen;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: darkgreen;
+        }
+    </style>
 </head>
 <body>
-    <div id="home-container">
-        <!-- Header -->
-        <div id="home-header">Welcome to Trailblazer</div>
+    <div id="home-container">
+        <!-- Header -->
+        <div id="home-header">Welcome to Trailblazer</div>
 
-        <!-- Search Bar -->
-        <div id="search-bar">
-            <label for="dropdown">Where do you want to hike today?</label>
-            <select id="dropdown">
-                <option value="mt-baldy">Mt. Baldy</option>
-            </select>
-        </div>
+        <!-- Search Bar -->
+        <div id="search-bar">
+            <label for="dropdown">Where do you want to hike today?</label>
+            <select id="dropdown">
+                <option value="mt-baldy">Mt. Baldy</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
 
-        <!-- Globe Icon -->
-        <img id="globe_static" src="globe_static.png" alt="Globe Icon">
+        <!-- Globe Icon -->
+        <img id="globe-icon" src="globe_static.png" alt="Spinning Globe">
 
-        <!-- Go Button -->
-        <button id="goButton">Go</button>
-    </div>
+        <!-- Go Button -->
+        <button id="goButton">Go</button>
+    </div>
 
-    <script>
-        document.getElementById('goButton').addEventListener('click', function () {
-            const selectedLocation = document.getElementById('dropdown').value;
-            if (selectedLocation === 'mt-baldy') {
-                window.location.href = "index.html";
-            }
-        });
-    </script>
+    <script>
+        document.getElementById('goButton').addEventListener('click', function () {
+            const selectedLocation = document.getElementById('dropdown').value;
+            if (selectedLocation === 'mt-baldy') {
+                window.location.href = "index.html";
+            }
+        });
+    </script>
 </body>
 </html>
