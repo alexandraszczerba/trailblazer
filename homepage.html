@@ -3,49 +3,66 @@
 <head>
     <meta charset="utf-8">
     <title>Trailblazer</title>
+    <!-- Include Google Fonts for better typography -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body, html {
+        /* Reset margins and paddings */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
             width: 100%;
             height: 100%;
             font-family: 'Roboto', sans-serif;
+            background-color: #222;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #222;
-            color: white;
         }
 
         #home-container {
             text-align: center;
+            position: relative;
         }
 
         #home-header {
-            font-size: 36px;
-            margin-bottom: 20px;
+            font-size: 48px;
+            margin-bottom: 30px;
         }
 
         #search-bar {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        #search-bar label {
+            font-size: 24px;
+            margin-bottom: 15px;
         }
 
         #dropdown {
-            width: 300px;
-            padding: 10px;
-            font-size: 16px;
+            width: 350px;
+            padding: 15px;
+            font-size: 18px;
             border-radius: 5px;
             border: 1px solid #ccc;
-            margin-bottom: 20px;
+        }
+
+        #globe-icon {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 30px;
         }
 
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 15px 30px;
+            font-size: 20px;
             background-color: forestgreen;
             color: white;
             border: none;
@@ -60,14 +77,22 @@
 </head>
 <body>
     <div id="home-container">
+        <!-- Header -->
         <div id="home-header">Welcome to Trailblazer</div>
+
+        <!-- Search Bar -->
         <div id="search-bar">
-            <label for="dropdown" style="margin-bottom: 10px;">Where do you want to hike today?</label>
+            <label for="dropdown">Where do you want to hike today?</label>
             <select id="dropdown">
                 <option value="mt-baldy">Mt. Baldy</option>
             </select>
-            <button id="goButton">Go</button>
         </div>
+
+        <!-- Globe Icon -->
+        <img id="globe-icon" src="images/globe.png" alt="Globe Icon">
+
+        <!-- Go Button -->
+        <button id="goButton">Go</button>
     </div>
 
     <script>
