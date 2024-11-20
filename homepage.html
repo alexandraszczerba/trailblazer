@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Globe and Trail App</title>
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+    }
+    #searchContainer {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      gap: 5px;
+    }
+    #searchInput {
+      padding: 5px;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    #searchButton {
+      padding: 5px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #searchButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Enter a location (e.g., Paris)">
+    <button id="searchButton">Go</button>
+  </div>
+
+  <script type="module">
+    import { initialize3DMap, createTrail } from './app.js';
+
+    // Initialize the Cesium Viewer
+    Cesium.Ion.defaultAccessToken = 'your_access_token_here';
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain(),
+      animation: false,
+      timeline: false,
+      fullscreenButton: false,
+      baseLayerPicker: false
+    });
+
+    // Add spinning functionality
+    viewer.scene.postRender.addEventListener(() => {
+      const spinRate = 0.1; // Adjust for faster or slower spin
+      const delta = viewer.clock.elapsedTime; 
+      viewer.scene.camera.rotate(Cesium.Cartesian3.UNIT_Z, -spinRate * delta);
+    });
+
+    // Initialize existing map and trails functionality
+    initialize3DMap(viewer);
+
+    // Add search functionality
+    function flyToLocation(query) {
+      Cesium.GeoJsonDataSource.load(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&polygon_geojson=1`)
+        .then(data => {
+          if (data.entities && data.entities.length > 0) {
+            const entity = data.entities[0];
+            const position = entity.position.getValue(Cesium.JulianDate.now());
+            viewer.camera.flyTo({
+              destination: position,
+              orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-30.0),
+                roll: 0.0
+              }
+            });
+          } else {
+            alert('Location not found. Please try another search.');
+          }
+        })
+        .catch(error => {
+          console.error('Error during search:', error);
+          alert('An error occurred during the search.');
+        });
+    }
+
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const query = document.getElementById('searchInput').value;
+      if (query) {
+        flyToLocation(query);
+      }
+    });
+
+    document.getElementById('searchInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        const query = document.getElementById('searchInput').value;
+        if (query) {
+          flyToLocation(query);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
