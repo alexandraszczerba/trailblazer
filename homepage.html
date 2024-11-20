@@ -59,7 +59,7 @@
 
   <script>
     // Your Cesium access token
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+    Cesium.Ion.defaultAccessToken = 'your_access_token_here';
 
     // Initialize the Cesium Viewer
     const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -119,33 +119,6 @@
         }
       }
     });
-  </script>
-</body>
-
-
-<!DOCTYPE html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spinning Globe Page</title>
-  <!-- Include your styles and scripts as needed -->
-</head>
-<body>
-  <!-- Add a link back to the main Cesium map -->
-  <nav>
-    <a href="index.html">Back to Main Map</a>
-  </nav>
-
-  <!-- Your spinning globe code -->
-  <div id="cesiumContainer"></div>
-  <div id="searchContainer">
-    <input type="text" id="searchInput" placeholder="Enter a location (e.g., Paris)">
-    <button id="searchButton">Go</button>
-  </div>
-
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-  <script>
-    // Your spinning globe JavaScript code
   </script>
 </body>
 </html>
