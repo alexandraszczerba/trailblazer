@@ -8,30 +8,14 @@ export function initialize3DMap(viewer) {
         },
     });
 
-    // Define waypoints for trailheads
-    const trailheads = [
-        {
-            name: "Baldy Bowl Trailhead",
-            position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
-        },
-        {
-            name: "Devil's Backbone Trailhead",
-            position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050),
-        },
-        {
-            name: "Manker Campground Trailhead",
-            position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900),
-        },
-        {
-            name: "Icehouse Canyon Trailhead",
-            position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500),
-        },
-    ];
-
-    // Define trails
-    const trails = [
+    // Trail metadata
+    const trailData = [
         {
             name: "Baldy Bowl Trail",
+            elevation: "3050 ft",
+            length: "4 miles",
+            difficulty: "Hard",
+            weather: "Clear, 55°F",
             path: [
                 Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 2100),
                 Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
@@ -41,6 +25,10 @@ export function initialize3DMap(viewer) {
         },
         {
             name: "Devil's Backbone to Mount Baldy Summit",
+            elevation: "3068 ft",
+            length: "3 miles",
+            difficulty: "Moderate",
+            weather: "Partly Cloudy, 50°F",
             path: [
                 Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
                 Cesium.Cartesian3.fromDegrees(-117.6350, 34.2895, 3068),
@@ -49,31 +37,9 @@ export function initialize3DMap(viewer) {
         },
     ];
 
-    // Add waypoints to the map
-    trailheads.forEach((trailhead) => {
-        viewer.entities.add({
-            name: trailhead.name,
-            position: trailhead.position,
-            point: {
-                pixelSize: 10,
-                color: Cesium.Color.BLUE,
-                outlineColor: Cesium.Color.WHITE,
-                outlineWidth: 2,
-            },
-            label: {
-                text: trailhead.name,
-                font: "14pt monospace",
-                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                outlineWidth: 2,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -10),
-            },
-        });
-    });
-
     // Add trails to the map
-    trails.forEach((trail) => {
-        viewer.entities.add({
+    trailData.forEach((trail) => {
+        const entity = viewer.entities.add({
             name: trail.name,
             polyline: {
                 positions: trail.path,
@@ -81,40 +47,33 @@ export function initialize3DMap(viewer) {
                 material: trail.color,
                 clampToGround: true,
             },
+            properties: {
+                elevation: trail.elevation,
+                length: trail.length,
+                difficulty: trail.difficulty,
+                weather: trail.weather,
+            },
         });
     });
-}
 
-export function createTrail(viewer) {
-    let activeTrailPoints = [];
-    let activePolyline = null;
+    // Add click handler for displaying trail info
+    viewer.selectedEntityChanged.addEventListener((entity) => {
+        if (entity) {
+            const trailInfoPanel = document.getElementById("trailInfoPanel");
+            trailInfoPanel.style.display = "block";
 
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-    handler.setInputAction(function (click) {
-        const earthPosition = viewer.camera.pickEllipsoid(
-            click.position,
-            viewer.scene.globe.ellipsoid
-        );
+            // Update trail name
+            document.getElementById("trailName").innerText = entity.name;
 
-        if (Cesium.defined(earthPosition)) {
-            activeTrailPoints.push(earthPosition);
-
-            if (activePolyline) {
-                viewer.entities.remove(activePolyline);
-            }
-
-            activePolyline = viewer.entities.add({
-                polyline: {
-                    positions: activeTrailPoints,
-                    width: 5,
-                    material: Cesium.Color.YELLOW,
-                },
-            });
+            // Update dropdown content
+            document.getElementById("trailDetails").innerHTML = `
+                <li>Elevation: ${entity.properties.elevation.getValue()}</li>
+                <li>Length: ${entity.properties.length.getValue()}</li>
+                <li>Difficulty: ${entity.properties.difficulty.getValue()}</li>
+                <li>Weather: ${entity.properties.weather.getValue()}</li>
+            `;
+        } else {
+            document.getElementById("trailInfoPanel").style.display = "none";
         }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    handler.setInputAction(function () {
-        handler.destroy();
-        console.log("Trail creation finished:", activeTrailPoints);
-    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    });
 }
