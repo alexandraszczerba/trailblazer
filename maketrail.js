@@ -1,8 +1,5 @@
 // maketrail.js
 
-// Ensure CesiumJS is loaded with the correct access token
-Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
-
 /**
  * Initializes the 3D Map with trail creation functionality.
  * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
@@ -100,7 +97,7 @@ export function initialize3DMap(viewer) {
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    // Optional: Add a reset button functionality
+    // Reset Trail Button functionality
     const resetBtn = document.getElementById('resetTrailBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
