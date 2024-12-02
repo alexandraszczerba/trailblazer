@@ -1,6 +1,12 @@
+// maketrail.js
+
 // Ensure CesiumJS is loaded
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
+/**
+ * Initializes the 3D Map with trail creation functionality.
+ * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
+ */
 export function initialize3DMap(viewer) {
     // Fly to Mt. Baldy
     viewer.camera.flyTo({
@@ -74,7 +80,7 @@ export function initialize3DMap(viewer) {
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     // Add Cesium OSM Buildings, a global 3D buildings layer
-    async function initializeViewer() {
+    async function initializeBuildings() {
         try {
             const buildingTileset = await Cesium.createOsmBuildingsAsync();
             viewer.scene.primitives.add(buildingTileset);
@@ -84,5 +90,5 @@ export function initialize3DMap(viewer) {
     }
 
     // Call the async function to add buildings
-    initializeViewer();
+    initializeBuildings();
 }
