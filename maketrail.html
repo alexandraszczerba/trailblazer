@@ -18,6 +18,7 @@
         #cesiumContainer {
             width: 100%;
             height: 100%;
+            position: relative;
         }
 
         #infoBox {
@@ -27,6 +28,7 @@
             background: rgba(255, 255, 255, 0.9);
             padding: 10px;
             border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
             z-index: 10;
             font-size: 14px;
             min-width: 150px;
@@ -56,18 +58,20 @@
     <!-- Info box -->
     <div id="infoBox">Click on the map to add points</div>
 
-    <!-- JavaScript for creating a trail -->
+    <!-- Link to custom JavaScript -->
     <script type="module">
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        import { initialize3DMap } from './maketrail.js';
 
+        // Initialize the Cesium Viewer
         const viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: Cesium.createWorldTerrain(),
+            timeline: false, // Disable timeline
             animation: false, // Disable animation controls
-            timeline: false,  // Disable timeline
             fullscreenButton: false,
             baseLayerPicker: false
         });
 
+        // Fly to Mt. Baldy (redundant since initialize3DMap also does this, but kept for immediate viewer positioning)
         viewer.camera.flyTo({
             destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
             orientation: {
@@ -77,56 +81,8 @@
             }
         });
 
-        let activeTrailPoints = [];
-        let activePolyline = null;
-
-        const infoBox = document.getElementById('infoBox');
-
-        function createTrail() {
-            if (activePolyline) {
-                viewer.entities.remove(activePolyline);
-                activeTrailPoints = [];
-            }
-
-            const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-
-            handler.setInputAction((click) => {
-                const earthPosition = viewer.scene.pickPosition(click.position);
-                if (Cesium.defined(earthPosition)) {
-                    activeTrailPoints.push(earthPosition);
-
-                    if (activeTrailPoints.length === 1) {
-                        viewer.entities.add({
-                            position: earthPosition,
-                            point: {
-                                pixelSize: 10,
-                                color: Cesium.Color.YELLOW
-                            }
-                        });
-                    } else {
-                        if (activePolyline) {
-                            viewer.entities.remove(activePolyline);
-                        }
-                        activePolyline = viewer.entities.add({
-                            polyline: {
-                                positions: activeTrailPoints,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                } else {
-                    infoBox.innerHTML = 'No valid position selected.';
-                }
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-            handler.setInputAction(() => {
-                handler.destroy();
-            }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-        }
-
-        // Automatically start trail creation
-        createTrail();
+        // Initialize the 3D map functionality
+        initialize3DMap(viewer);
     </script>
 </body>
 </html>
