@@ -77,27 +77,61 @@
 
     <!-- Link to custom JavaScript -->
     <script type="module">
-        import { initialize3DMap } from './maketrail.js';
+        // Set your Cesium Ion access token
+        Cesium.Ion.defaultAccessToken = 'your-access-token';
 
-        const terrainProvider = new Cesium.CesiumTerrainProvider({
-                url: Cesium.IonResource.fromAssetId(1) // Cesium World Terrain asset
-            });
-        
-       
         // Initialize the Cesium Viewer
         const viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: new Cesium.CesiumTerrainProvider({
-            url: Cesium.IonResource.fromAssetId(1)
+                url: Cesium.IonResource.fromAssetId(1), // Fallback terrain provider
             }),
             timeline: false, // Disable timeline
             animation: false, // Disable animation controls
             fullscreenButton: false,
-            baseLayerPicker: false
+            baseLayerPicker: false, // Disable base layer picker
         });
 
-         viewer.terrainProvider = terrainProvider;
-        // Initialize the 3D map functionality
-        initialize3DMap(viewer);
+        // Enable lighting for better terrain visualization
+        viewer.scene.globe.enableLighting = true;
+
+        // Add event listener for resetting the trail
+        const resetTrailBtn = document.getElementById('resetTrailBtn');
+        resetTrailBtn.addEventListener('click', () => {
+            viewer.entities.removeAll();
+            console.log("Trail reset successfully");
+        });
+
+        // Log to confirm viewer initialization
+        console.log("Cesium Viewer initialized successfully");
+
+        // Add basic functionality for testing
+        const trailheads = [
+            {
+                name: "Baldy Bowl Trailhead",
+                position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
+            },
+        ];
+
+        trailheads.forEach((trailhead) => {
+            viewer.entities.add({
+                name: trailhead.name,
+                position: trailhead.position,
+                point: {
+                    pixelSize: 10,
+                    color: Cesium.Color.RED,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2,
+                },
+                label: {
+                    text: trailhead.name,
+                    font: "14pt sans-serif",
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    outlineWidth: 2,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(0, -10),
+                },
+            });
+        });
     </script>
 </body>
 </html>
