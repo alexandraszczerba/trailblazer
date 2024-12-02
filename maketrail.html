@@ -79,15 +79,23 @@
     <script type="module">
         import { initialize3DMap } from './maketrail.js';
 
+        const terrainProvider = new Cesium.CesiumTerrainProvider({
+                url: Cesium.IonResource.fromAssetId(1) // Cesium World Terrain asset
+            });
+        
+       
         // Initialize the Cesium Viewer
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(),
+            terrainProvider: new Cesium.CesiumTerrainProvider({
+            url: Cesium.IonResource.fromAssetId(1)
+            }),
             timeline: false, // Disable timeline
             animation: false, // Disable animation controls
             fullscreenButton: false,
             baseLayerPicker: false
         });
 
+         viewer.terrainProvider = terrainProvider;
         // Initialize the 3D map functionality
         initialize3DMap(viewer);
     </script>
