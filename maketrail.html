@@ -46,11 +46,28 @@
             font-size: 14px;
             border-radius: 5px;
         }
+
+        #resetTrailBtn {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <!-- Link to go back to the homepage -->
     <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+
+    <!-- Reset Trail Button -->
+    <button id="resetTrailBtn">Reset Trail</button>
 
     <!-- Cesium container -->
     <div id="cesiumContainer"></div>
@@ -69,16 +86,6 @@
             animation: false, // Disable animation controls
             fullscreenButton: false,
             baseLayerPicker: false
-        });
-
-        // Fly to Mt. Baldy (redundant since initialize3DMap also does this, but kept for immediate viewer positioning)
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-            orientation: {
-                heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-15.0),
-                roll: 0.0
-            }
         });
 
         // Initialize the 3D map functionality
