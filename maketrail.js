@@ -13,110 +13,138 @@ export function initialize3DMap(viewer) {
             pitch: Cesium.Math.toRadians(-15.0),
             roll: 0.0
         },
-        duration: 2 // Optional: Duration of the flyTo animation in seconds
+        duration: 2 // Duration of the flyTo animation in seconds
     });
 
-    // Variables to keep track of points and trail
-    let points = [];
-    let activePolyline = null;
-
-    // Info box to display coordinates and elevation
-    const infoBox = document.getElementById('infoBox');
-
-    // Create a handler for user interactions
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-
-    handler.setInputAction(function (click) {
-        if (points.length >= 5) {
-            alert('You can only place up to 5 points.');
-            return;
+    // Sample trail data (you can replace this with actual data)
+    const trails = [
+        {
+            name: 'Sample Trail',
+            path: Cesium.Cartesian3.fromDegreesArray([
+                -117.64607, 34.0,
+                -117.645, 34.005,
+                -117.644, 34.010
+            ]),
+            color: Cesium.Color.BLUE
         }
+    ];
 
-        // Get the position where the user clicked
-        const earthPosition = viewer.scene.pickPosition(click.position);
-        if (Cesium.defined(earthPosition)) {
-            // Get the longitude, latitude, and height
-            const cartographic = Cesium.Cartographic.fromCartesian(earthPosition);
-            const longitude = Cesium.Math.toDegrees(cartographic.longitude).toFixed(6);
-            const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
-
-            // Sample terrain to get elevation
-            Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [cartographic])
-                .then(([updatedCartographic]) => {
-                    const elevation = updatedCartographic.height.toFixed(2);
-
-                    // Update the info box with coordinates and elevation
-                    infoBox.innerHTML = `Point ${points.length + 1}:<br>
-                        Longitude: ${longitude}°<br>
-                        Latitude: ${latitude}°<br>
-                        Elevation: ${elevation} m`;
-
-                    // Add the point to the map
-                    const newPoint = viewer.entities.add({
-                        position: earthPosition,
-                        point: {
-                            pixelSize: 10,
-                            color: Cesium.Color.RED,
-                            outlineColor: Cesium.Color.BLACK,
-                            outlineWidth: 2
-                        },
-                        label: {
-                            text: `Point ${points.length + 1}`,
-                            font: '14pt sans-serif',
-                            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                            outlineWidth: 2,
-                            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                            pixelOffset: new Cesium.Cartesian2(0, -10)
-                        }
-                    });
-
-                    points.push(newPoint);
-
-                    // Update or create the polyline
-                    if (activePolyline) {
-                        viewer.entities.remove(activePolyline);
-                    }
-
-                    if (points.length > 1) {
-                        const positions = points.map(point => point.position.getValue(Cesium.JulianDate.now()));
-                        activePolyline = viewer.entities.add({
-                            polyline: {
-                                positions: positions,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching terrain data:', error);
-                    alert('Unable to fetch elevation data.');
-                });
-        } else {
-            console.warn('No valid position was picked on the map.');
-        }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-    // Reset Trail Button functionality
-    const resetBtn = document.getElementById('resetTrailBtn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            // Remove all points
-            points.forEach(point => viewer.entities.remove(point));
-            points = [];
-
-            // Remove polyline
-            if (activePolyline) {
-                viewer.entities.remove(activePolyline);
-                activePolyline = null;
-            }
-
-            // Clear info box
-            infoBox.innerHTML = 'Click on the map to add points';
+    // Function to add trails to the map
+    function addTrails(trails) {
+        trails.forEach(trail => {
+            viewer.entities.add({
+                name: trail.name,
+                polyline: {
+                    positions: trail.path,
+                    width: 5,
+                    material: trail.color,
+                    clampToGround: true
+                }
+            });
         });
     }
 
-    // Add Cesium OSM Buildings, a global 3D buildings layer
+    // Function to add waypoints (if you have any)
+    function addWaypoints(trailheads) {
+        trailheads.forEach(trailhead => {
+            viewer.entities.add({
+                name: trailhead.name,
+                position: Cesium.Cartesian3.fromDegrees(trailhead.longitude, trailhead.latitude),
+                point: {
+                    pixelSize: 10,
+                    color: Cesium.Color.RED,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2
+                },
+                label: {
+                    text: trailhead.name,
+                    font: '14pt sans-serif',
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    outlineWidth: 2,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(0, -10)
+                }
+            });
+        });
+    }
+
+    // Sample trailhead data (you can replace this with actual data)
+    const trailheads = [
+        {
+            name: 'Trailhead 1',
+            longitude: -117.64607,
+            latitude: 34.0
+        }
+    ];
+
+    // Add waypoints and trails to the map
+    addWaypoints(trailheads);
+    addTrails(trails);
+
+    // Hide trail info box when canvas is clicked (assuming you have a 'trailInfoBox' element)
+    viewer.scene.canvas.addEventListener('click', function () {
+        const infoBox = document.getElementById('trailInfoBox');
+        if (infoBox) {
+            infoBox.style.display = 'none';
+        }
+    });
+
+    // Event listener for 'Create Trail' button
+    const createTrailBtn = document.getElementById('createTrailBtn');
+    if (createTrailBtn) {
+        createTrailBtn.addEventListener('click', function () {
+            createTrail();
+        });
+    }
+
+    let activeTrailPoints = [];
+    let activePolyline = null;
+
+    // Function to allow users to create a custom trail
+    function createTrail() {
+        if (activePolyline) {
+            viewer.entities.remove(activePolyline);
+            activeTrailPoints = [];
+        }
+
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
+        handler.setInputAction(function (click) {
+            const earthPosition = viewer.scene.pickPosition(click.position);
+            if (Cesium.defined(earthPosition)) {
+                activeTrailPoints.push(earthPosition);
+
+                // Add a point for the first click
+                viewer.entities.add({
+                    position: earthPosition,
+                    point: {
+                        pixelSize: 10,
+                        color: Cesium.Color.YELLOW
+                    }
+                });
+
+                // Update or create the polyline
+                if (activeTrailPoints.length > 1) {
+                    if (activePolyline) {
+                        viewer.entities.remove(activePolyline);
+                    }
+                    activePolyline = viewer.entities.add({
+                        polyline: {
+                            positions: activeTrailPoints,
+                            width: 5,
+                            material: Cesium.Color.YELLOW
+                        }
+                    });
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        handler.setInputAction(function () {
+            handler.destroy();
+        }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    }
+
+    // Add Cesium OSM Buildings
     async function initializeBuildings() {
         try {
             const buildingTileset = await Cesium.createOsmBuildingsAsync();
@@ -126,6 +154,5 @@ export function initialize3DMap(viewer) {
         }
     }
 
-    // Call the async function to add buildings
     initializeBuildings();
 }
