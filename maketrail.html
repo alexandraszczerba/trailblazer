@@ -44,6 +44,34 @@
             font-size: 14px;
             border-radius: 5px;
         }
+      #undoBtn {
+    position: absolute;
+    top: 60px;
+    left: 10px;
+    z-index: 1000;
+    padding: 10px 30px;
+    background-color: #ffc107; /* Yellow color */
+    color: black;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#resetBtn {
+    position: absolute;
+    top: 110px;
+    left: 10px;
+    z-index: 1000;
+    padding: 10px 30px;
+    background-color: #dc3545; /* Red color */
+    color: white;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+      
     </style>
 </head>
 <body>
@@ -55,7 +83,8 @@
 
     <!-- Info box -->
     <div id="infoBox">Click on the map to add points</div>
-
+  <button id="undoBtn">Undo</button>
+  <button id="resetBtn">Reset</button>
     <!-- JavaScript for creating a trail -->
     <script type="module">
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
