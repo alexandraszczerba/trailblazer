@@ -1,224 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <!-- Include the CesiumJS JavaScript and CSS files -->
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-  <title>Main Cesium Map</title>
-  <style>
-    #trailInfoDropdown {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 300px;
-      z-index: 1000;
-    }
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Main Cesium Map</title>
+  <style>
+    #trailInfoBox {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
 
-    #trailInfoToggle {
-      width: 100%;
-      padding: 10px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    #trailInfoBox h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-    #trailInfoContent {
-      display: none;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 5px;
-    }
+    #trailPhotos img {
+      width: 80px;
+      height: 80px;
+      border-radius: 5px;
+    }
 
-    #trailInfoContent h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
-    }
+    #createTrailBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 10px 30px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-    #trailPhotos img {
-      width: 80px;
-      height: 80px;
-      border-radius: 5px;
-    }
-
-    #createTrailBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    #homeBtn {
-      position: absolute;
-      top: 50px;
-      left: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      font-size: 14px;
-      border-radius: 5px;
-    }
-  </style>
+    #homeBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      padding: 10px 30px;
+      background-color: #28a745;
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Button to create a trail -->
-  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
+  <!-- Button to create a trail -->
+  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
 
-  <!-- Link to go back to the homepage -->
-  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+  <!-- Link to go back to the homepage -->
+  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
 
-  <!-- Cesium container -->
-  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
+  <!-- Cesium container -->
+  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
 
-  <!-- Trail Info Dropdown -->
-  <div id="trailInfoDropdown">
-    <button id="trailInfoToggle">Trail Info</button>
-    <div id="trailInfoContent">
-      <h3 id="trailName"></h3>
-      <p id="trailDetails"></p>
-      <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
-    </div>
-  </div>
+  <!-- Trail info box -->
+  <div id="trailInfoBox">
+    <h3 id="trailName"></h3>
+    <p id="trailDetails"></p>
+    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
+  </div>
 
-  <script type="module">
-    Cesium.Ion.defaultAccessToken = 'your-access-token-here';
+  <script type="module">
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-    const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrainProvider: Cesium.createWorldTerrain(),
-      timeline: false,
-      animation: false,
-    });
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+    });
 
-    const trailInformation = {
-      "Icehouse Canyon Trailhead": {
-        difficulty: "8/10",
-        distance: "8 miles",
-        maxElevation: "9399 feet",
-        photos: ["photo1.jpg", "photo2.jpg", "photo3.jpg"],
-        notes: "Windy/Cold weather. Be cautious of ice and snow during winter.",
-      },
-      "Baldy Bowl Trailhead": {
-        difficulty: "6/10",
-        distance: "7 miles",
-        maxElevation: "8600 feet",
-        photos: ["baldy1.jpg", "baldy2.jpg"],
-        notes: "Great trail for summer hikes.",
-      },
-      "Devil's Backbone Trailhead": {
-        difficulty: "10/10",
-        distance: "13.1 miles",
-        maxElevation: "10200 feet",
-        photos: ["backbone1.jpg", "backbone2.jpg"],
-        notes: "Be super cautious when hiking. Steep drops with recent reports of casualties.",
-      },
-    };
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+      orientation: {
+        heading: Cesium.Math.toRadians(0.0),
+        pitch: Cesium.Math.toRadians(-15.0),
+      }
+    });
 
-    const trailheads = [
-      {
-        name: "Icehouse Canyon Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500),
-      },
-      {
-        name: "Baldy Bowl Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
-      },
-      {
-        name: "Devil's Backbone Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050),
-      },
-      {
-        name: "Manker Campground Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900),
-      },
-    ];
+    const trailInformation = {
+      "Icehouse Canyon Trailhead": {
+        difficulty: "8/10",
+        distance: "8 miles",
+        maxElevation: "9399 feet",
+        photos: ["photo1.jpg", "photo2.jpg", "photo3.jpg"],
+        notes: "Windy/Cold weather. Be cautious of ice and snow during winter."
+      },
+      "Baldy Bowl Trailhead": {
+        difficulty: "6/10",
+        distance: "7 miles",
+        maxElevation: "8600 feet",
+        photos: ["baldy1.jpg", "baldy2.jpg"],
+        notes: "Great trail for summer hikes."
+      },
+      "Devil's Backbone Trailhead": {
+        difficulty: "10/10",
+        distance: "13.1 miles",
+        maxElevation: "10200 feet",
+        photos: ["backbone1.jpg", "backbone2.jpg"],
+        notes: "Be super cautious when hiking. Steep drops with recent reports of casualties."
+      }
+    };
 
-    function addWaypoints(waypoints) {
-      waypoints.forEach((waypoint) => {
-        const entity = viewer.entities.add({
-          name: waypoint.name,
-          position: waypoint.position,
-          point: {
-            pixelSize: 10,
-            color: Cesium.Color.BLUE,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
-          },
-          label: {
-            text: waypoint.name,
-            font: "14pt monospace",
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            outlineWidth: 2,
-            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset: new Cesium.Cartesian2(0, -10),
-          },
-        });
+    const trailheads = [
+      {
+        name: "Icehouse Canyon Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500)
+      },
+      {
+        name: "Baldy Bowl Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050)
+      },
+      {
+        name: "Devil's Backbone Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050)
+      },
+      {
+        name: "Manker Campground Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900)
+      }
+    ];
 
-        entity.description = new Cesium.CallbackProperty(() => {
-          const info = trailInformation[waypoint.name];
-          if (!info) {
-            console.error(`No trail information found for ${waypoint.name}`);
-            return;
-          }
+    const trails = [
+      {
+        name: "Baldy Bowl Trail",
+        path: [
+          Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 2100),
+          Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
+          Cesium.Cartesian3.fromDegrees(-117.6390, 34.2891, 2400)
+        ],
+        color: Cesium.Color.RED
+      },
+      {
+        name: "Devil's Backbone to Mount Baldy Summit",
+        path: [
+          Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 2300),
+          Cesium.Cartesian3.fromDegrees(-117.6350, 34.2895, 3068)
+        ],
+        color: Cesium.Color.GREEN
+      }
+    ];
 
-          const trailInfoContent = document.getElementById("trailInfoContent");
-          const trailName = document.getElementById("trailName");
-          const trailDetails = document.getElementById("trailDetails");
-          const trailPhotos = document.getElementById("trailPhotos");
+    function addWaypoints(waypoints) {
+      waypoints.forEach(waypoint => {
+        const entity = viewer.entities.add({
+          name: waypoint.name,
+          position: waypoint.position,
+          point: {
+            pixelSize: 10,
+            color: Cesium.Color.BLUE,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2
+          },
+          label: {
+            text: waypoint.name,
+            font: '14pt monospace',
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -10)
+          }
+        });
 
-          if (!trailInfoContent || !trailName || !trailDetails || !trailPhotos) {
-            console.error("One or more trail info elements are missing from the DOM.");
-            return;
-          }
+        entity.description = new Cesium.CallbackProperty(() => {
+          const info = trailInformation[waypoint.name];
+          if (info) {
+            document.getElementById('trailInfoBox').style.display = 'block';
+            document.getElementById('trailName').innerText = waypoint.name;
+            document.getElementById('trailDetails').innerHTML = `
+              Difficulty: ${info.difficulty}<br>
+              Distance: ${info.distance}<br>
+              Max Elevation: ${info.maxElevation}<br>
+              Notes: ${info.notes}
+            `;
 
-          // Update trail information UI
-          trailInfoContent.style.display = "block";
-          trailName.innerText = waypoint.name;
-          trailDetails.innerHTML = `
-            <strong>Difficulty:</strong> ${info.difficulty}<br>
-            <strong>Distance:</strong> ${info.distance}<br>
-            <strong>Max Elevation:</strong> ${info.maxElevation}<br>
-            <strong>Notes:</strong> ${info.notes}
-          `;
+            const photoContainer = document.getElementById('trailPhotos');
+            photoContainer.innerHTML = '';
+            info.photos.forEach(photo => {
+              const img = document.createElement('img');
+              img.src = photo;
+              img.alt = waypoint.name;
+              photoContainer.appendChild(img);
+            });
+          }
+        });
+      });
+    }
 
-          // Clear and update photos
-          trailPhotos.innerHTML = "";
-          info.photos.forEach((photo) => {
-            const img = document.createElement("img");
-            img.src = photo;
-            img.alt = waypoint.name;
-            trailPhotos.appendChild(img);
-          });
-        });
-      });
-    }
+    function addTrails(trails) {
+      trails.forEach(trail => {
+        viewer.entities.add({
+          name: trail.name,
+          polyline: {
+            positions: trail.path,
+            width: 5,
+            material: trail.color,
+            clampToGround: true
+          }
+        });
+      });
+    }
 
-    function initializeTrailInfoToggle() {
-      const trailInfoToggle = document.getElementById("trailInfoToggle");
-      const trailInfoContent = document.getElementById("trailInfoContent");
+    addWaypoints(trailheads);
+    addTrails(trails);
 
-      trailInfoToggle.addEventListener("click", () => {
-        if (trailInfoContent.style.display === "none") {
-          trailInfoContent.style.display = "block";
-        } else {
-          trailInfoContent.style.display = "none";
-        }
-      });
-    }
+    viewer.scene.canvas.addEventListener('click', function () {
+      document.getElementById('trailInfoBox').style.display = 'none';
+    });
 
-    addWaypoints(trailheads);
-    initializeTrailInfoToggle();
-  </script>
+    document.getElementById('createTrailBtn').addEventListener('click', function () {
+      createTrail();
+    });
+
+    let activeTrailPoints = [];
+    let activePolyline = null;
+
+    function createTrail() {
+      if (activePolyline) {
+        viewer.entities.remove(activePolyline);
+        activeTrailPoints = [];
+      }
+
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+      handler.setInputAction(function (click) {
+        const earthPosition = viewer.camera.pickEllipsoid(click.position, viewer.scene.globe.ellipsoid);
+        if (Cesium.defined(earthPosition)) {
+          activeTrailPoints.push(earthPosition);
+
+          if (activeTrailPoints.length === 1) {
+            viewer.entities.add({
+              position: earthPosition,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW
+              }
+            });
+          } else {
+            if (activePolyline) {
+              viewer.entities.remove(activePolyline);
+            }
+            activePolyline = viewer.entities.add({
+              polyline: {
+                positions: activeTrailPoints,
+                width: 5,
+                material: Cesium.Color.YELLOW
+              }
+            });
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      handler.setInputAction(function () {
+        handler.destroy();
+      }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    }
+
+    // Add Cesium OSM Buildings, a global 3D buildings layer.
+    const buildingTileset = await Cesium.createOsmBuildingsAsync();
+    viewer.scene.primitives.add(buildingTileset);
+  </script>
 </body>
 </html>
