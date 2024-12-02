@@ -78,20 +78,20 @@
   <script type="module">
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-    const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrainProvider: Cesium.createWorldTerrain(),
-      sceneMode: Cesium.SceneMode.SCENE3D, // Enforce 3D mode
-      sceneModePicker: false, // Remove the scene mode picker widget
-      timeline: false, // Disable timeline
-      animation: false // Disable animation controls
-    });
-
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain(),
+      sceneMode: Cesium.SceneMode.SCENE3D, // Force 3D mode
+      sceneModePicker: false, // Disable mode switching
+      timeline: false, // Disable timeline
+      animation: false // Disable animation controls
+    });
 
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
       orientation: {
         heading: Cesium.Math.toRadians(0.0),
         pitch: Cesium.Math.toRadians(-15.0),
+        roll: 0.0
       }
     });
 
