@@ -44,7 +44,7 @@ handler.setInputAction(function (click) {
         const latitude = Cesium.Math.toDegrees(cartographic.latitude).toFixed(6);
 
         // Sample terrain to get elevation
-        viewer.terrainProvider.sampleTerrainMostDetailed([cartographic])
+        Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [cartographic])
             .then(([updatedCartographic]) => {
                 const elevation = updatedCartographic.height.toFixed(2);
 
@@ -77,5 +77,19 @@ handler.setInputAction(function (click) {
                 console.error('Error fetching terrain data:', error);
                 alert('Unable to fetch elevation data.');
             });
+    } else {
+        console.warn('No valid position was picked on the map.');
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+// Add Cesium OSM Buildings, a global 3D buildings layer
+async function initializeViewer() {
+    try {
+        const buildingTileset = await Cesium.createOsmBuildingsAsync();
+        viewer.scene.primitives.add(buildingTileset);
+    } catch (error) {
+        console.error('Error adding OSM Buildings:', error);
+    }
+}
+
+initializeViewer();
