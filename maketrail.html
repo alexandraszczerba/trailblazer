@@ -60,7 +60,54 @@
     }
   </style>
 </head>
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <title>Cesium Map</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
 <body>
+    <div id="cesiumContainer"></div>
+    <script>
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain(),
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            baseLayerPicker: false
+        });
+
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-15.0),
+                roll: 0.0
+            }
+        });
+    </script>
+</body>
+</html>
+<body>
+  
     <!-- Button to create a trail -->
     <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
 
