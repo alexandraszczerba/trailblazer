@@ -4,8 +4,8 @@ Cesium.Ion.defaultAccessToken = 'your_access_token_here';
 // Initialize the Cesium Viewer
 const viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain(),
-    animation: false,
-    timeline: false,
+    animation: false, // Disable animation controls
+    timeline: false,  // Disable timeline
     fullscreenButton: false,
     baseLayerPicker: false
 });
