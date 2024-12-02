@@ -95,17 +95,29 @@ export function initialize3DMap(viewer) {
         createTrailBtn.addEventListener('click', function () {
             createTrail();
         });
+    } else {
+        // If no button is present, start trail creation automatically
+        createTrail();
     }
 
     let activeTrailPoints = [];
     let activePolyline = null;
+    let pointEntities = []; // To keep track of point entities for undo and reset
+
+    // Get references to Undo and Reset buttons
+    const undoBtn = document.getElementById('undoBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
     // Function to allow users to create a custom trail
     function createTrail() {
+        // If there's an existing polyline, remove it and reset points
         if (activePolyline) {
             viewer.entities.remove(activePolyline);
-            activeTrailPoints = [];
+            activePolyline = null;
         }
+        activeTrailPoints = [];
+        pointEntities.forEach(entity => viewer.entities.remove(entity));
+        pointEntities = [];
 
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
@@ -114,20 +126,23 @@ export function initialize3DMap(viewer) {
             if (Cesium.defined(earthPosition)) {
                 activeTrailPoints.push(earthPosition);
 
-                // Add a point for the first click
-                viewer.entities.add({
+                // Add a point entity for each click
+                const pointEntity = viewer.entities.add({
                     position: earthPosition,
                     point: {
                         pixelSize: 10,
-                        color: Cesium.Color.YELLOW
+                        color: Cesium.Color.YELLOW,
+                        outlineColor: Cesium.Color.BLACK,
+                        outlineWidth: 2
                     }
                 });
+                pointEntities.push(pointEntity);
 
                 // Update or create the polyline
+                if (activePolyline) {
+                    viewer.entities.remove(activePolyline);
+                }
                 if (activeTrailPoints.length > 1) {
-                    if (activePolyline) {
-                        viewer.entities.remove(activePolyline);
-                    }
                     activePolyline = viewer.entities.add({
                         polyline: {
                             positions: activeTrailPoints,
@@ -142,6 +157,55 @@ export function initialize3DMap(viewer) {
         handler.setInputAction(function () {
             handler.destroy();
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+        // Undo button functionality
+        if (undoBtn) {
+            undoBtn.addEventListener('click', function () {
+                if (activeTrailPoints.length > 0) {
+                    // Remove the last point entity
+                    const lastPointEntity = pointEntities.pop();
+                    viewer.entities.remove(lastPointEntity);
+
+                    // Remove the last point from the trail points array
+                    activeTrailPoints.pop();
+
+                    // Update the polyline
+                    if (activePolyline) {
+                        viewer.entities.remove(activePolyline);
+                        activePolyline = null;
+                    }
+                    if (activeTrailPoints.length > 1) {
+                        activePolyline = viewer.entities.add({
+                            polyline: {
+                                positions: activeTrailPoints,
+                                width: 5,
+                                material: Cesium.Color.YELLOW
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // Reset button functionality
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                // Remove all point entities
+                pointEntities.forEach(function (entity) {
+                    viewer.entities.remove(entity);
+                });
+                pointEntities = [];
+
+                // Clear the trail points array
+                activeTrailPoints = [];
+
+                // Remove the polyline
+                if (activePolyline) {
+                    viewer.entities.remove(activePolyline);
+                    activePolyline = null;
+                }
+            });
+        }
     }
 
     // Add Cesium OSM Buildings
