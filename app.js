@@ -1,4 +1,10 @@
 export function initialize3DMap(viewer) {
+    const cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain(),
+    timeline: false, // Disable timeline
+    animation: false // Disable animation controls
+    });
+
     // Fly to Mt. Baldy
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
