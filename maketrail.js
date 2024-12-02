@@ -1,5 +1,5 @@
 // Ensure CesiumJS is loaded
-Cesium.Ion.defaultAccessToken = 'your_access_token_here';
+Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
 // Initialize the Cesium Viewer
 const viewer = new Cesium.Viewer('cesiumContainer', {
