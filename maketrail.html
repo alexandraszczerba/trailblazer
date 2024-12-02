@@ -1,137 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <title>Create Your Trail</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
+    <meta charset="utf-8">
+    <!-- Include the CesiumJS JavaScript and CSS files -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <title>Create Your Trail</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
 
-        #cesiumContainer {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
 
-        #infoBox {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-            font-size: 14px;
-            min-width: 150px;
-        }
+        #infoBox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+            font-size: 14px;
+            min-width: 150px;
+        }
 
-        #homeBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-
-        #resetTrailBtn {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-    </style>
+        #homeBtn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Link to go back to the homepage -->
-    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+    <!-- Link to go back to the homepage -->
+    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
 
-    <!-- Reset Trail Button -->
-    <button id="resetTrailBtn">Reset Trail</button>
+    <!-- Cesium container -->
+    <div id="cesiumContainer"></div>
 
-    <!-- Cesium container -->
-    <div id="cesiumContainer"></div>
+    <!-- Info box -->
+    <div id="infoBox">Click on the map to add points</div>
 
-    <!-- Info box -->
-    <div id="infoBox">Click on the map to add points</div>
+    <!-- JavaScript for creating a trail -->
+    <script type="module">
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-    <!-- Link to custom JavaScript -->
-    <script type="module">
-        // Set your Cesium Ion access token
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            animation: false, // Disable animation controls
+            timeline: false,  // Disable timeline
+            fullscreenButton: false,
+            baseLayerPicker: false
+        });
 
-        // Initialize the Cesium Viewer
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: new Cesium.CesiumTerrainProvider({
-                url: Cesium.IonResource.fromAssetId(1), // Fallback terrain provider
-            }),
-            timeline: false, // Disable timeline
-            animation: false, // Disable animation controls
-            fullscreenButton: false,
-            baseLayerPicker: false, // Disable base layer picker
-        });
+        console.log(viewer);
 
-        // Enable lighting for better terrain visualization
-        viewer.scene.globe.enableLighting = true;
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-15.0),
+                roll: 0.0
+            }
+        });
 
-        // Add event listener for resetting the trail
-        const resetTrailBtn = document.getElementById('resetTrailBtn');
-        resetTrailBtn.addEventListener('click', () => {
-            viewer.entities.removeAll();
-            console.log("Trail reset successfully");
-        });
+        let activeTrailPoints = [];
+        let activePolyline = null;
 
-        // Log to confirm viewer initialization
-        console.log("Cesium Viewer initialized successfully");
+        const infoBox = document.getElementById('infoBox');
 
-        // Add basic functionality for testing
-        const trailheads = [
-            {
-                name: "Baldy Bowl Trailhead",
-                position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
-            },
-        ];
+        function createTrail() {
+            if (activePolyline) {
+                viewer.entities.remove(activePolyline);
+                activeTrailPoints = [];
+            }
 
-        trailheads.forEach((trailhead) => {
-            viewer.entities.add({
-                name: trailhead.name,
-                position: trailhead.position,
-                point: {
-                    pixelSize: 10,
-                    color: Cesium.Color.RED,
-                    outlineColor: Cesium.Color.BLACK,
-                    outlineWidth: 2,
-                },
-                label: {
-                    text: trailhead.name,
-                    font: "14pt sans-serif",
-                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                    outlineWidth: 2,
-                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                    pixelOffset: new Cesium.Cartesian2(0, -10),
-                },
-            });
-        });
-    </script>
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
+            handler.setInputAction((click) => {
+                const earthPosition = viewer.scene.pickPosition(click.position);
+                if (Cesium.defined(earthPosition)) {
+                    activeTrailPoints.push(earthPosition);
+
+                    if (activeTrailPoints.length === 1) {
+                        viewer.entities.add({
+                            position: earthPosition,
+                            point: {
+                                pixelSize: 10,
+                                color: Cesium.Color.YELLOW
+                            }
+                        });
+                    } else {
+                        if (activePolyline) {
+                            viewer.entities.remove(activePolyline);
+                        }
+                        activePolyline = viewer.entities.add({
+                            polyline: {
+                                positions: activeTrailPoints,
+                                width: 5,
+                                material: Cesium.Color.YELLOW
+                            }
+                        });
+                    }
+                } else {
+                    infoBox.innerHTML = 'No valid position selected.';
+                }
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            handler.setInputAction(() => {
+                handler.destroy();
+            }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        }
+
+        // Automatically start trail creation
+        createTrail();
+    </script>
 </body>
 </html>
