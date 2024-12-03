@@ -1,4 +1,4 @@
-For index.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,31 +32,37 @@ For index.html
       border-radius: 5px;
     }
 
-    #createTrailBtn {
+   /* Improved button styles */
+    #createTrailBtn, #homeBtn {
       position: absolute;
       top: 10px;
-      left: 10px;
       z-index: 1000;
-      padding: 10px 30px;
-      background-color: #007BFF;
+      padding: 12px 30px;
+      background: linear-gradient(90deg, #28a745, #1e7e34);
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
       cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #createTrailBtn:hover, #homeBtn:hover {
+      background: linear-gradient(90deg, #1e7e34, #155724);
+      transform: scale(1.05);
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #createTrailBtn {
+      left: 10px;
     }
 
     #homeBtn {
-      position: absolute;
-      top: 10px;
       right: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      font-size: 14px;
-      border-radius: 5px;
-    }
   </style>
 </head>
 <body>
