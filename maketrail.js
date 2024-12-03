@@ -1,13 +1,18 @@
-<!-- Include this in your existing HTML file within the <script type="module"> tag -->
 <script type="module">
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+    // Access the Cesium object from the global window object
+    const Cesium = window.Cesium;
 
+    // Set your Cesium Ion access token
+    Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_ACCESS_TOKEN';
+
+    // Initialize the Cesium Viewer with terrain provider
     const viewer = new Cesium.Viewer('cesiumContainer', {
         animation: false, // Disable animation controls
         timeline: false,  // Disable timeline
         fullscreenButton: false,
         baseLayerPicker: false,
-        terrainProvider: Cesium.createWorldTerrain() // Add terrain provider
+        terrainProvider: Cesium.createWorldTerrain(), // Add terrain provider
+        imageryProvider: Cesium.createWorldImagery()  // Add imagery provider (optional)
     });
 
     viewer.camera.flyTo({
@@ -86,9 +91,17 @@
 
                         // Calculate distance from the last point
                         let distanceFromLastPoint = 0;
+                        let geodesicDistance = 0;
                         if (activeTrailPoints.length > 1) {
                             const previousPoint = activeTrailPoints[activeTrailPoints.length - 2];
                             distanceFromLastPoint = Cesium.Cartesian3.distance(previousPoint, accuratePosition);
+
+                            // Calculate geodesic distance
+                            const geodesic = new Cesium.EllipsoidGeodesic(
+                                Cesium.Cartographic.fromCartesian(previousPoint),
+                                Cesium.Cartographic.fromCartesian(accuratePosition)
+                            );
+                            geodesicDistance = geodesic.surfaceDistance;
                         }
 
                         // Update the info box
@@ -97,7 +110,12 @@
                             Longitude: ${longitude.toFixed(6)}°<br>
                             Latitude: ${latitude.toFixed(6)}°<br>
                             Elevation: ${elevation.toFixed(2)} m<br>
-                            ${activeTrailPoints.length > 1 ? `Distance from last point: ${distanceFromLastPoint.toFixed(2)} m` : ''}
+                            ${
+                                activeTrailPoints.length > 1
+                                    ? `Straight-line Distance from last point: ${distanceFromLastPoint.toFixed(2)} m<br>
+                                       Geodesic Distance from last point: ${geodesicDistance.toFixed(2)} m`
+                                    : ''
+                            }
                         `;
 
                         // Update or create the polyline
@@ -209,6 +227,9 @@
                 handler.destroy();
                 handler = null;
             }
+
+            // Restart trail creation
+            createTrail();
         });
     } else {
         console.error('Reset button not found');
