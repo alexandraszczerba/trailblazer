@@ -1,11 +1,8 @@
 // maketrail.js
 
-/**
- * Initializes the 3D Map with trail creation functionality.
- */
 (function () {
     // Set your Cesium Ion access token
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+    Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_ACCESS_TOKEN';
 
     // Initialize the Cesium Viewer
     const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -32,10 +29,21 @@
     let pointEntities = [];
     let handler = null;
 
-    // Get references to the buttons
+    // Get references to the buttons and info box
     const undoBtn = document.getElementById('undoBtn');
     const resetBtn = document.getElementById('resetBtn');
     const infoBox = document.getElementById('infoBox');
+
+    // Check if the elements exist
+    if (!undoBtn) {
+        console.error('Undo button not found');
+    }
+    if (!resetBtn) {
+        console.error('Reset button not found');
+    }
+    if (!infoBox) {
+        console.error('Info box not found');
+    }
 
     // Start trail creation
     createTrail();
@@ -156,7 +164,9 @@
         }
 
         // Clear the info box
-        infoBox.innerHTML = 'Click on the map to add points';
+        if (infoBox) {
+            infoBox.innerHTML = 'Click on the map to add points';
+        }
     }
 
     // Undo button functionality
@@ -204,6 +214,8 @@
                 }
             }
         });
+    } else {
+        console.error('Undo button element not found.');
     }
 
     // Reset button functionality
@@ -216,5 +228,7 @@
                 handler = null;
             }
         });
+    } else {
+        console.error('Reset button element not found.');
     }
 })();
