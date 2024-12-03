@@ -27,21 +27,20 @@
     <!-- JavaScript for creating a trail -->
     <script>
         // Set your Cesium Ion access token
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_ACCESS_TOKEN';
 
-        // Initialize the terrain provider
-        const terrainProvider = new Cesium.CesiumTerrainProvider({
-            url: Cesium.IonResource.fromAssetId(1)
-        });
-
-        // Initialize the Cesium Viewer with terrain provider
+        // Initialize the Cesium Viewer with imagery and terrain providers
         const viewer = new Cesium.Viewer('cesiumContainer', {
             animation: false, // Disable animation controls
             timeline: false,  // Disable timeline
             fullscreenButton: false,
-            baseLayerPicker: false,
-            terrainProvider: terrainProvider // Set the terrain provider
+            baseLayerPicker: false, // Base layer picker is disabled
+            imageryProvider: Cesium.createWorldImagery(), // Add imagery provider
+            terrainProvider: Cesium.createWorldTerrain()  // Add terrain provider
         });
+
+        // Ensure the globe is enabled
+        viewer.scene.globe = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
 
         // Fly to Mt. Baldy
         viewer.camera.flyTo({
@@ -81,7 +80,7 @@
                     const cartographicPosition = Cesium.Cartographic.fromCartesian(earthPosition);
 
                     // Sample the terrain to get accurate elevation
-                    Cesium.sampleTerrainMostDetailed(terrainProvider, [cartographicPosition])
+                    Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [cartographicPosition])
                         .then((updatedPositions) => {
                             const updatedCartographic = updatedPositions[0];
                             const longitude = Cesium.Math.toDegrees(updatedCartographic.longitude);
