@@ -31,38 +31,37 @@
       border-radius: 5px;
     }
 
-    /* Buttons Styling */
-    #createTrailBtn, #homeBtn {
-      position: absolute;
-      z-index: 1000;
-      padding: 15px 30px;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: transform 0.3s ease, background-color 0.3s ease;
-    }
+    #createTrailBtn {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #007BFF; /* Blue */
+            color: black;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-    /* Create Trail Button - Top Left */
-    #createTrailBtn {
-      top: 15px;
-      left: 15px;
-      background-color: #007BFF; /* Blue */
-      color: white;
-    }
+        #homeBtn {
+            position: absolute;
+            top: 110px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color:  #28a745; /* Green */
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
     #createTrailBtn:hover {
       background-color: #0056b3; /* Darker blue */
       transform: scale(1.1); /* Slightly enlarge */
-    }
-
-    /* Go Home Button - Top Right */
-    #homeBtn {
-      top: 15px;
-      left: 15px;
-      background-color: #28a745; /* Green */
-      color: white;
     }
 
     #homeBtn:hover {
