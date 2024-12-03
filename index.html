@@ -31,39 +31,53 @@
       border-radius: 5px;
     }
 
-    #createTrailBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    /* Buttons Styling */
+    #createTrailBtn, #homeBtn {
+      position: absolute;
+      z-index: 1000;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
 
-    #homeBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      font-size: 14px;
-      border-radius: 5px;
-    }
+    /* Create Trail Button - Top Left */
+    #createTrailBtn {
+      top: 15px;
+      left: 15px;
+      background-color: #007BFF; /* Blue */
+      color: white;
+    }
+
+    #createTrailBtn:hover {
+      background-color: #0056b3; /* Darker blue */
+      transform: scale(1.1); /* Slightly enlarge */
+    }
+
+    /* Go Home Button - Top Right */
+    #homeBtn {
+      top: 15px;
+      right: 15px;
+      background-color: #28a745; /* Green */
+      color: white;
+    }
+
+    #homeBtn:hover {
+      background-color: #1e7e34; /* Darker green */
+      transform: scale(1.1); /* Slightly enlarge */
+    }
   </style>
 </head>
 <body>
   <!-- Button to create a trail -->
-  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
+<button id="createTrailBtn">Create Your Own Trail</button>
 
-  <!-- Link to go back to the homepage -->
-  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+<!-- Link to go back to the homepage -->
+<button id="homeBtn">Go to Home Page</button>
+
 
   <!-- Cesium container -->
   <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
@@ -92,6 +106,14 @@
         pitch: Cesium.Math.toRadians(-15.0),
       }
     });
+
+      document.getElementById('createTrailBtn').addEventListener('click', () => {
+      window.location.href = 'maketrail.html';
+    });
+
+    document.getElementById('homeBtn').addEventListener('click', () => {
+      window.location.href = 'homepage.html';
+    });
 
     const trailInformation = {
       "Icehouse Canyon Trailhead": {
