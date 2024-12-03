@@ -1,162 +1,74 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <title>Create Your Trail</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Create Your Trail</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
 
-        #cesiumContainer {
-            width: 100%;
-            height: 100%;
-        }
+    #cesiumContainer {
+      width: 100%;
+      height: 100vh;
+    }
 
-        #infoBox {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
-            font-size: 14px;
-            min-width: 150px;
-        }
+    #infoBox {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 10;
+      font-size: 14px;
+      min-width: 150px;
+    }
 
-        #homeBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-      #undoBtn {
-    position: absolute;
-    top: 60px;
-    left: 10px;
-    z-index: 1000;
-    padding: 10px 30px;
-    background-color: #ffc107; /* Yellow color */
-    color: black;
-    font-size: 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+    #undoBtn, #resetBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 10px 30px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-#resetBtn {
-    position: absolute;
-    top: 110px;
-    left: 10px;
-    z-index: 1000;
-    padding: 10px 30px;
-    background-color: #dc3545; /* Red color */
-    color: white;
-    font-size: 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-      
-    </style>
+    #undoBtn {
+      background-color: #ffc107; /* Yellow */
+      color: black;
+      top: 60px;
+    }
+
+    #resetBtn {
+      background-color: #dc3545; /* Red */
+      color: white;
+      top: 110px;
+    }
+  </style>
 </head>
 <body>
-    <!-- Link to go back to the homepage -->
-    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
-
-    <!-- Cesium container -->
-    <div id="cesiumContainer"></div>
-
-    <!-- Info box -->
-    <div id="infoBox">Click on the map to add points</div>
+  <!-- Undo and Reset buttons -->
   <button id="undoBtn">Undo</button>
   <button id="resetBtn">Reset</button>
-    <!-- JavaScript for creating a trail -->
-    <script type="module">
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            animation: false, // Disable animation controls
-            timeline: false,  // Disable timeline
-            fullscreenButton: false,
-            baseLayerPicker: false
-        });
+  <!-- Cesium container -->
+  <div id="cesiumContainer"></div>
 
-        console.log(viewer);
+  <!-- Info box -->
+  <div id="infoBox">Click on the map to add points</div>
 
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-            orientation: {
-                heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-15.0),
-                roll: 0.0
-            }
-        });
-
-        let activeTrailPoints = [];
-        let activePolyline = null;
-
-        const infoBox = document.getElementById('infoBox');
-
-        function createTrail() {
-            if (activePolyline) {
-                viewer.entities.remove(activePolyline);
-                activeTrailPoints = [];
-            }
-
-            const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-
-            handler.setInputAction((click) => {
-                const earthPosition = viewer.scene.pickPosition(click.position);
-                if (Cesium.defined(earthPosition)) {
-                    activeTrailPoints.push(earthPosition);
-
-                    if (activeTrailPoints.length === 1) {
-                        viewer.entities.add({
-                            position: earthPosition,
-                            point: {
-                                pixelSize: 10,
-                                color: Cesium.Color.YELLOW
-                            }
-                        });
-                    } else {
-                        if (activePolyline) {
-                            viewer.entities.remove(activePolyline);
-                        }
-                        activePolyline = viewer.entities.add({
-                            polyline: {
-                                positions: activeTrailPoints,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                } else {
-                    infoBox.innerHTML = 'No valid position selected.';
-                }
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-            handler.setInputAction(() => {
-                handler.destroy();
-            }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-        }
-
-        // Automatically start trail creation
-        createTrail();
-    </script>
+  <!-- Include maketrail.js as a module -->
+  <script type="module" src="maketrail.js"></script>
 </body>
 </html>
