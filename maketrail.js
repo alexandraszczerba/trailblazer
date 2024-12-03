@@ -222,7 +222,3 @@ export function initialize3DMap(viewer) {
 
     initializeBuildings();
 }
-
-// Initialize the 3D Map
-import { initialize3DMap } from './maketrail.js';
-initialize3DMap(viewer);
