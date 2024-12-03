@@ -89,37 +89,27 @@ export function initialize3DMap(viewer) {
         }
     });
 
-    // Event listener for 'Create Trail' button
-    const createTrailBtn = document.getElementById('createTrailBtn');
-    if (createTrailBtn) {
-        createTrailBtn.addEventListener('click', function () {
-            createTrail();
-        });
-    } else {
-        // If no button is present, start trail creation automatically
-        createTrail();
-    }
-
-    let activeTrailPoints = [];
-    let activePolyline = null;
-    let pointEntities = []; // To keep track of point entities for undo and reset
-
     // Get references to Undo and Reset buttons
     const undoBtn = document.getElementById('undoBtn');
     const resetBtn = document.getElementById('resetBtn');
 
+    // Variables to keep track of the active trail
+    let activeTrailPoints = [];
+    let activePolyline = null;
+    let pointEntities = []; // To keep track of point entities for undo and reset
+    let handler = null; // To manage the ScreenSpaceEventHandler
+
     // Function to allow users to create a custom trail
     function createTrail() {
-        // If there's an existing polyline, remove it and reset points
-        if (activePolyline) {
-            viewer.entities.remove(activePolyline);
-            activePolyline = null;
+        // Destroy any existing handler to prevent multiple handlers
+        if (handler) {
+            handler.destroy();
         }
-        activeTrailPoints = [];
-        pointEntities.forEach(entity => viewer.entities.remove(entity));
-        pointEntities = [];
 
-        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        // Clear existing trail data
+        clearTrail();
+
+        handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         handler.setInputAction(function (click) {
             const earthPosition = viewer.scene.pickPosition(click.position);
@@ -155,57 +145,84 @@ export function initialize3DMap(viewer) {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         handler.setInputAction(function () {
-            handler.destroy();
+            // Double-click to finish trail creation
+            if (handler) {
+                handler.destroy();
+                handler = null;
+            }
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    }
 
-        // Undo button functionality
-        if (undoBtn) {
-            undoBtn.addEventListener('click', function () {
-                if (activeTrailPoints.length > 0) {
-                    // Remove the last point entity
-                    const lastPointEntity = pointEntities.pop();
-                    viewer.entities.remove(lastPointEntity);
+    // Function to clear the current trail
+    function clearTrail() {
+        // Remove all point entities
+        pointEntities.forEach(function (entity) {
+            viewer.entities.remove(entity);
+        });
+        pointEntities = [];
 
-                    // Remove the last point from the trail points array
-                    activeTrailPoints.pop();
+        // Clear the trail points array
+        activeTrailPoints = [];
 
-                    // Update the polyline
-                    if (activePolyline) {
-                        viewer.entities.remove(activePolyline);
-                        activePolyline = null;
-                    }
-                    if (activeTrailPoints.length > 1) {
-                        activePolyline = viewer.entities.add({
-                            polyline: {
-                                positions: activeTrailPoints,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                }
-            });
+        // Remove the polyline
+        if (activePolyline) {
+            viewer.entities.remove(activePolyline);
+            activePolyline = null;
         }
+    }
 
-        // Reset button functionality
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function () {
-                // Remove all point entities
-                pointEntities.forEach(function (entity) {
-                    viewer.entities.remove(entity);
-                });
-                pointEntities = [];
+    // Event listener for 'Create Trail' button
+    const createTrailBtn = document.getElementById('createTrailBtn');
+    if (createTrailBtn) {
+        createTrailBtn.addEventListener('click', function () {
+            createTrail();
+        });
+    } else {
+        // If no button is present, start trail creation automatically
+        createTrail();
+    }
 
-                // Clear the trail points array
-                activeTrailPoints = [];
+    // Undo button functionality
+    if (undoBtn) {
+        undoBtn.addEventListener('click', function () {
+            if (activeTrailPoints.length > 0) {
+                // Remove the last point entity
+                const lastPointEntity = pointEntities.pop();
+                viewer.entities.remove(lastPointEntity);
 
-                // Remove the polyline
+                // Remove the last point from the trail points array
+                activeTrailPoints.pop();
+
+                // Update the polyline
                 if (activePolyline) {
                     viewer.entities.remove(activePolyline);
                     activePolyline = null;
                 }
-            });
-        }
+                if (activeTrailPoints.length > 1) {
+                    activePolyline = viewer.entities.add({
+                        polyline: {
+                            positions: activeTrailPoints,
+                            width: 5,
+                            material: Cesium.Color.YELLOW
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Reset button functionality
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            // Clear the trail
+            clearTrail();
+
+            // Destroy the handler if it's active
+            if (handler) {
+                handler.destroy();
+                handler = null;
+            }
+        });
     }
 
     // Add Cesium OSM Buildings
