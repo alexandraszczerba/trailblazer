@@ -1,162 +1,219 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <title>Create Your Trail</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
+<script type="module">
+    // Set your Cesium Ion access token
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-        #cesiumContainer {
-            width: 100%;
-            height: 100%;
-        }
+    // Initialize the Cesium Viewer with terrain provider
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+        animation: false, // Disable animation controls
+        timeline: false,  // Disable timeline
+        fullscreenButton: false,
+        baseLayerPicker: false,
+        terrainProvider: Cesium.createWorldTerrain() // Add terrain provider
+    });
 
-        #infoBox {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
-            font-size: 14px;
-            min-width: 150px;
-        }
+    // Fly to Mt. Baldy
+    viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+        orientation: {
+            heading: Cesium.Math.toRadians(0.0),
+            pitch: Cesium.Math.toRadians(-15.0),
+            roll: 0.0
+        }
+    });
 
-        #homeBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-      #undoBtn {
-    position: absolute;
-    top: 60px;
-    left: 10px;
-    z-index: 1000;
-    padding: 10px 30px;
-    background-color: #ffc107; /* Yellow color */
-    color: black;
-    font-size: 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+    let activeTrailPoints = [];
+    let activePolyline = null;
+    let pointEntities = [];
+    let handler = null;
 
-#resetBtn {
-    position: absolute;
-    top: 110px;
-    left: 10px;
-    z-index: 1000;
-    padding: 10px 30px;
-    background-color: #dc3545; /* Red color */
-    color: white;
-    font-size: 14px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-      
-    </style>
-</head>
-<body>
-    <!-- Link to go back to the homepage -->
-    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+    // Get references to the buttons and info box
+    const infoBox = document.getElementById('infoBox');
+    const undoBtn = document.getElementById('undoBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
-    <!-- Cesium container -->
-    <div id="cesiumContainer"></div>
+    // Start trail creation
+    createTrail();
 
-    <!-- Info box -->
-    <div id="infoBox">Click on the map to add points</div>
-  <button id="undoBtn">Undo</button>
-  <button id="resetBtn">Reset</button>
-    <!-- JavaScript for creating a trail -->
-    <script type="module">
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+    function createTrail() {
+        if (handler) {
+            handler.destroy();
+        }
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            animation: false, // Disable animation controls
-            timeline: false,  // Disable timeline
-            fullscreenButton: false,
-            baseLayerPicker: false
-        });
+        clearTrail();
 
-        console.log(viewer);
+        handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-            orientation: {
-                heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-15.0),
-                roll: 0.0
-            }
-        });
+        handler.setInputAction((click) => {
+            const earthPosition = viewer.scene.pickPosition(click.position);
+            if (Cesium.defined(earthPosition)) {
+                // Convert to Cartographic to get longitude, latitude, and height
+                const cartographicPosition = Cesium.Cartographic.fromCartesian(earthPosition);
 
-        let activeTrailPoints = [];
-        let activePolyline = null;
+                // Sample the terrain to get accurate elevation
+                Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [cartographicPosition])
+                    .then((updatedPositions) => {
+                        const updatedCartographic = updatedPositions[0];
+                        const longitude = Cesium.Math.toDegrees(updatedCartographic.longitude);
+                        const latitude = Cesium.Math.toDegrees(updatedCartographic.latitude);
+                        const elevation = updatedCartographic.height;
 
-        const infoBox = document.getElementById('infoBox');
+                        // Update the position with accurate height
+                        const accuratePosition = Cesium.Cartesian3.fromRadians(
+                            updatedCartographic.longitude,
+                            updatedCartographic.latitude,
+                            elevation
+                        );
 
-        function createTrail() {
-            if (activePolyline) {
-                viewer.entities.remove(activePolyline);
-                activeTrailPoints = [];
-            }
+                        activeTrailPoints.push(accuratePosition);
 
-            const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+                        // Add a point entity
+                        const pointEntity = viewer.entities.add({
+                            position: accuratePosition,
+                            point: {
+                                pixelSize: 10,
+                                color: Cesium.Color.YELLOW,
+                                outlineColor: Cesium.Color.BLACK,
+                                outlineWidth: 2
+                            },
+                            label: {
+                                text: `Elevation: ${elevation.toFixed(2)} m`,
+                                font: '14pt sans-serif',
+                                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                                outlineWidth: 2,
+                                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                                pixelOffset: new Cesium.Cartesian2(0, -15),
+                                disableDepthTestDistance: Number.POSITIVE_INFINITY
+                            }
+                        });
+                        pointEntities.push(pointEntity);
 
-            handler.setInputAction((click) => {
-                const earthPosition = viewer.scene.pickPosition(click.position);
-                if (Cesium.defined(earthPosition)) {
-                    activeTrailPoints.push(earthPosition);
+                        // Calculate distance from the last point
+                        let distanceFromLastPoint = 0;
+                        if (activeTrailPoints.length > 1) {
+                            const previousPoint = activeTrailPoints[activeTrailPoints.length - 2];
+                            distanceFromLastPoint = Cesium.Cartesian3.distance(previousPoint, accuratePosition);
+                        }
 
-                    if (activeTrailPoints.length === 1) {
-                        viewer.entities.add({
-                            position: earthPosition,
-                            point: {
-                                pixelSize: 10,
-                                color: Cesium.Color.YELLOW
-                            }
-                        });
-                    } else {
-                        if (activePolyline) {
-                            viewer.entities.remove(activePolyline);
-                        }
-                        activePolyline = viewer.entities.add({
-                            polyline: {
-                                positions: activeTrailPoints,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                } else {
-                    infoBox.innerHTML = 'No valid position selected.';
-                }
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                        // Update the info box
+                        infoBox.innerHTML = `
+                            <strong>Point ${activeTrailPoints.length}:</strong><br>
+                            Longitude: ${longitude.toFixed(6)}°<br>
+                            Latitude: ${latitude.toFixed(6)}°<br>
+                            Elevation: ${elevation.toFixed(2)} m<br>
+                            ${activeTrailPoints.length > 1 ? `Distance from last point: ${distanceFromLastPoint.toFixed(2)} m` : ''}
+                        `;
 
-            handler.setInputAction(() => {
-                handler.destroy();
-            }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-        }
+                        // Update or create the polyline
+                        if (activePolyline) {
+                            viewer.entities.remove(activePolyline);
+                        }
+                        if (activeTrailPoints.length > 1) {
+                            activePolyline = viewer.entities.add({
+                                polyline: {
+                                    positions: activeTrailPoints,
+                                    width: 5,
+                                    material: Cesium.Color.YELLOW
+                                }
+                            });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error sampling terrain:', error);
+                    });
+            } else {
+                infoBox.innerHTML = 'No valid position selected.';
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        // Automatically start trail creation
-        createTrail();
-    </script>
-</body>
-</html>
+        handler.setInputAction(() => {
+            if (handler) {
+                handler.destroy();
+                handler = null;
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    }
+
+    // Function to clear the current trail
+    function clearTrail() {
+        // Remove all point entities
+        pointEntities.forEach((entity) => {
+            viewer.entities.remove(entity);
+        });
+        pointEntities = [];
+
+        // Clear the trail points array
+        activeTrailPoints = [];
+
+        // Remove the polyline
+        if (activePolyline) {
+            viewer.entities.remove(activePolyline);
+            activePolyline = null;
+        }
+
+        // Reset the info box
+        infoBox.innerHTML = 'Click on the map to add points';
+    }
+
+    // Undo button functionality
+    if (undoBtn) {
+        undoBtn.addEventListener('click', () => {
+            if (activeTrailPoints.length > 0) {
+                // Remove the last point entity
+                const lastPointEntity = pointEntities.pop();
+                viewer.entities.remove(lastPointEntity);
+
+                // Remove the last point from the trail points array
+                activeTrailPoints.pop();
+
+                // Update the polyline
+                if (activePolyline) {
+                    viewer.entities.remove(activePolyline);
+                    activePolyline = null;
+                }
+                if (activeTrailPoints.length > 1) {
+                    activePolyline = viewer.entities.add({
+                        polyline: {
+                            positions: activeTrailPoints,
+                            width: 5,
+                            material: Cesium.Color.YELLOW
+                        }
+                    });
+                }
+
+                // Update the info box
+                if (activeTrailPoints.length > 0) {
+                    const lastPoint = activeTrailPoints[activeTrailPoints.length - 1];
+                    const cartographic = Cesium.Cartographic.fromCartesian(lastPoint);
+                    const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+                    const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+                    const elevation = cartographic.height;
+
+                    infoBox.innerHTML = `
+                        <strong>Point ${activeTrailPoints.length}:</strong><br>
+                        Longitude: ${longitude.toFixed(6)}°<br>
+                        Latitude: ${latitude.toFixed(6)}°<br>
+                        Elevation: ${elevation.toFixed(2)} m
+                    `;
+                } else {
+                    infoBox.innerHTML = 'Click on the map to add points';
+                }
+            }
+        });
+    } else {
+        console.error('Undo button not found');
+    }
+
+    // Reset button functionality
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            clearTrail();
+
+            if (handler) {
+                handler.destroy();
+                handler = null;
+            }
+        });
+    } else {
+        console.error('Reset button not found');
+    }
+</script>
