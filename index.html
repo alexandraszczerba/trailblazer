@@ -31,48 +31,53 @@
       border-radius: 5px;
     }
 
-    .stacked-button {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        z-index: 1000;
-        padding: 15px 30px;
-        font-size: 16px;
-        font-weight: bold;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: transform 0.3s ease, background-color 0.3s ease;
+    /* Buttons Styling */
+    #createTrailBtn, #homeBtn {
+      position: absolute;
+      z-index: 1000;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
     }
 
-    /* Individual button styling */
+    /* Create Trail Button - Top Left */
     #createTrailBtn {
-        background-color: #007BFF; /* Blue */
-        color: white;
+      top: 15px;
+      left: 15px;
+      background-color: #007BFF; /* Blue */
+      color: white;
     }
 
     #createTrailBtn:hover {
-        background-color: #0056b3; /* Darker blue */
-        transform: scale(1.1); /* Slightly enlarge */
+      background-color: #0056b3; /* Darker blue */
+      transform: scale(1.1); /* Slightly enlarge */
     }
 
+    /* Go Home Button - Top Right */
     #homeBtn {
-        background-color: #28a745; /* Green */
-        color: white;
-        margin-top: 70px; /* Space below the first button */
+      top: 15px;
+      left: 15px;
+      background-color: #28a745; /* Green */
+      color: white;
     }
 
     #homeBtn:hover {
-        background-color: #1e7e34; /* Darker green */
-        transform: scale(1.1); /* Slightly enlarge */
+      background-color: #1e7e34; /* Darker green */
+      transform: scale(1.1); /* Slightly enlarge */
     }
   </style>
 </head>
 <body>
+  <!-- Button to create a trail -->
+<button id="createTrailBtn">Create Your Own Trail</button>
 
-    
-<button id="createTrailBtn" class="stacked-button">Create Your Own Trail</button>
-<button id="homeBtn" class="stacked-button">Go to Home Page</button>
+<!-- Link to go back to the homepage -->
+<button id="homeBtn">Go to Home Page</button>
+
 
   <!-- Cesium container -->
   <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
