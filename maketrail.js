@@ -5,6 +5,8 @@
  * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
  */
 export function initialize3DMap(viewer) {
+    const Cesium = window.Cesium;
+
     // Fly to Mt. Baldy
     viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
@@ -220,3 +222,7 @@ export function initialize3DMap(viewer) {
 
     initializeBuildings();
 }
+
+// Initialize the 3D Map
+import { initialize3DMap } from './maketrail.js';
+initialize3DMap(viewer);
