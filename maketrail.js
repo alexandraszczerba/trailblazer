@@ -7,16 +7,12 @@
 export function initialize3DMap(viewer) {
     const Cesium = window.Cesium;
 
-    // Fly to Mt. Baldy
-    viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-        orientation: {
-            heading: Cesium.Math.toRadians(0.0),
-            pitch: Cesium.Math.toRadians(-15.0),
-            roll: 0.0
-        },
-        duration: 2
-    });
+    // Arrays to store trail points, entities, segments, and total distance
+    const activeTrailPoints = [];
+    const pointEntities = [];
+    let trailPolyline = null;
+    let totalDistance = 0; // In meters
+    const trailSegments = []; // Array to store segment data
 
     /**
      * Updates the overall message area within the info box.
@@ -67,12 +63,41 @@ export function initialize3DMap(viewer) {
         pointEntities.push(entity);
     }
 
-    // Shared arrays and variables to keep track of trail points, entities, segments, and total distance
-    const activeTrailPoints = [];
-    const pointEntities = [];
-    let trailPolyline = null;
-    let totalDistance = 0; // In meters
-    const trailSegments = []; // Array to store segment data
+    /**
+     * Adds a fixed point at the specified longitude and latitude.
+     * @param {number} longitude - Longitude in degrees.
+     * @param {number} latitude - Latitude in degrees.
+     * @param {number} height - Height in meters.
+     * @param {string} labelText - Label text for the point.
+     */
+    function addFixedPoint(longitude, latitude, height, labelText) {
+        const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+
+        const entity = viewer.entities.add({
+            position: position,
+            point: {
+                pixelSize: 12,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2
+            },
+            label: {
+                text: labelText,
+                font: '14pt sans-serif',
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -25),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY
+            }
+        });
+
+        // Store fixed points separately if needed
+        fixedPointEntities.push(entity);
+    }
+
+    // Array to store fixed point entities
+    const fixedPointEntities = [];
 
     /**
      * Initializes the trail creation functionality.
@@ -165,7 +190,7 @@ export function initialize3DMap(viewer) {
         // Handle LEFT_DOUBLE_CLICK event to finalize trail creation
         handler.setInputAction(function () {
             handler.destroy();
-            updateOverallMessage("Trail creation finalized. You can use 'Undo' or 'Reset' buttons.");
+            updateOverallMessage("Trail creation finalized. You can use 'Undo', 'Reset', or 'Publish Trail' buttons.");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
@@ -240,16 +265,17 @@ export function initialize3DMap(viewer) {
     }
 
     /**
-     * Implements Undo and Reset functionalities for trail management.
+     * Implements Undo, Reset, and Publish functionalities for trail management.
      * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
      */
-    function implementUndoReset(viewer) {
+    function implementUndoResetPublish(viewer) {
         const undoBtn = document.getElementById('undoBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const publishBtn = document.getElementById('publishBtn');
 
         // Ensure buttons exist
-        if (!undoBtn || !resetBtn) {
-            console.warn("Undo or Reset button not found in the DOM.");
+        if (!undoBtn || !resetBtn || !publishBtn) {
+            console.warn("Undo, Reset, or Publish button not found in the DOM.");
             return;
         }
 
@@ -351,6 +377,149 @@ export function initialize3DMap(viewer) {
             // Clear segment-specific info
             updateSegmentInfo("");
         });
+
+        // Publish Button Event Listener
+        publishBtn.addEventListener('click', async function () {
+            if (activeTrailPoints.length === 0) {
+                updateOverallMessage("<span style='color: red;'>No trail to publish. Please create a trail first.</span>");
+                return;
+            }
+
+            try {
+                // Capture Screenshot
+                const screenshot = await captureScreenshot(viewer);
+
+                // Collect Trail Information
+                const trailInfo = {
+                    totalDistance: totalDistance.toFixed(2), // in meters
+                    segments: trailSegments
+                };
+
+                // Download Screenshot
+                downloadImage(screenshot, 'trail_screenshot.png');
+
+                // Download Trail Information as JSON
+                downloadJSON(trailInfo, 'trail_info.json');
+
+                // Optional: Provide a confirmation message
+                updateOverallMessage("<span style='color: green;'>Trail published successfully! Screenshot and trail information have been downloaded.</span>");
+            } catch (error) {
+                console.error("Error publishing trail:", error);
+                updateOverallMessage("<span style='color: red;'>Error publishing trail. See console for details.</span>");
+            }
+        });
+    }
+
+    /**
+     * Captures a screenshot of the current Cesium view.
+     * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
+     * @returns {Promise<string>} - A promise that resolves to the image data URL.
+     */
+    function captureScreenshot(viewer) {
+        return new Promise((resolve, reject) => {
+            // Render the scene
+            viewer.scene.render();
+
+            // Allow some time for the render
+            setTimeout(() => {
+                try {
+                    const canvas = viewer.scene.canvas;
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve(dataURL);
+                } catch (error) {
+                    reject(error);
+                }
+            }, 100); // Adjust timeout as needed
+        });
+    }
+
+    /**
+     * Triggers a download of an image.
+     * @param {string} dataURL - The image data URL.
+     * @param {string} filename - The desired filename for the download.
+     */
+    function downloadImage(dataURL, filename) {
+        const link = document.createElement('a');
+        link.href = dataURL;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    /**
+     * Triggers a download of a JSON file.
+     * @param {Object} data - The data to be serialized into JSON.
+     * @param {string} filename - The desired filename for the download.
+     */
+    function downloadJSON(data, filename) {
+        const jsonStr = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Displays detailed information about a selected trail segment.
+     * @param {Object} segment - The segment data.
+     */
+    function displaySegmentInfo(segment) {
+        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
+        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
+
+        updateSegmentInfo(`
+            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
+            <strong>Distance:</strong> ${segment.distance} meters<br>
+            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
+            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
+            <strong>Elevation Gain:</strong> ${gainText}
+        `);
+    }
+
+    /**
+     * Populates the segment dropdown menu with current trail segments.
+     */
+    function populateSegmentDropdown() {
+        const dropdown = document.getElementById('segmentDropdown');
+        if (!dropdown) return;
+
+        // Clear existing options except the first placeholder
+        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
+
+        // Populate with current segments
+        trailSegments.forEach((segment, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.text = `${segment.from} - ${segment.to}`;
+            dropdown.appendChild(option);
+        });
+
+        // Enable dropdown if there are segments
+        if (trailSegments.length > 0) {
+            dropdown.disabled = false;
+        } else {
+            dropdown.disabled = true;
+            dropdown.innerHTML = '<option value="" disabled selected>No segments available</option>';
+        }
+
+        // Remove existing event listeners to prevent multiple bindings
+        const newDropdown = dropdown.cloneNode(true);
+        dropdown.parentNode.replaceChild(newDropdown, dropdown);
+
+        // Add event listener for selection
+        newDropdown.addEventListener('change', function () {
+            const selectedIndex = this.value;
+            if (selectedIndex === "") return;
+
+            const segment = trailSegments[selectedIndex];
+            displaySegmentInfo(segment);
+        });
     }
 
     /**
@@ -366,15 +535,107 @@ export function initialize3DMap(viewer) {
     }
 
     /**
+     * Adds a fixed point at specified coordinates.
+     * @param {number} longitude - Longitude in degrees.
+     * @param {number} latitude - Latitude in degrees.
+     * @param {number} height - Height in meters.
+     * @param {string} labelText - Label text for the fixed point.
+     */
+    function addFixedPoint(longitude, latitude, height, labelText) {
+        const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+
+        const entity = viewer.entities.add({
+            position: position,
+            point: {
+                pixelSize: 12,
+                color: Cesium.Color.RED,
+                outlineColor: Cesium.Color.WHITE,
+                outlineWidth: 2
+            },
+            label: {
+                text: labelText,
+                font: '14pt sans-serif',
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -25),
+                disableDepthTestDistance: Number.POSITIVE_INFINITY
+            }
+        });
+
+        // Store fixed points separately if needed
+        fixedPointEntities.push(entity);
+    }
+
+    // Array to store fixed point entities
+    const fixedPointEntities = [];
+
+    /**
+     * Sets up the "Add Fixed Point" button functionality.
+     */
+    function setupAddFixedPointButton() {
+        const addFixedPointBtn = document.getElementById('addFixedPointBtn');
+        if (!addFixedPointBtn) {
+            console.warn("Add Fixed Point button not found in the DOM.");
+            return;
+        }
+
+        addFixedPointBtn.addEventListener('click', function () {
+            // Example fixed points - you can modify these coordinates as needed
+            const fixedPoints = [
+                { longitude: -117.64607, latitude: 34.0, height: 0, label: 'Fixed Point 1' },
+                { longitude: -117.64807, latitude: 34.002, height: 0, label: 'Fixed Point 2' },
+                { longitude: -117.65007, latitude: 34.004, height: 0, label: 'Fixed Point 3' }
+            ];
+
+            fixedPoints.forEach(point => {
+                addFixedPoint(point.longitude, point.latitude, point.height, point.label);
+            });
+
+            // Update overall message
+            updateOverallMessage("Fixed points added to the map.");
+        });
+    }
+
+    /**
      * Initializes the segment dropdown and populates it.
      */
     function initializeDropdown() {
         populateSegmentDropdown();
     }
 
-    // Initialize trail creation, Undo/Reset functionalities, and dropdown
-    createTrail();
-    implementUndoReset(viewer);
-    initializeBuildings();
-    initializeDropdown();
+    /**
+     * Initializes the publish trail functionality.
+     * Ensures that the "Publish Trail" button is linked correctly.
+     */
+    function initializePublishTrail() {
+        // This function is already handled within implementUndoResetPublish
+        // Included here for clarity
+    }
+
+    /**
+     * Initializes all functionalities.
+     */
+    function initializeAll() {
+        createTrail();
+        implementUndoResetPublish(viewer);
+        initializeBuildings();
+        initializeDropdown();
+        setupAddFixedPointButton();
+    }
+
+    // Initialize all functionalities
+    initializeAll();
+
+    /**
+     * Adds Cesium OSM Buildings asynchronously.
+     */
+    async function addCesiumOsmBuildings() {
+        try {
+            const buildingTileset = await Cesium.createOsmBuildingsAsync();
+            viewer.scene.primitives.add(buildingTileset);
+        } catch (error) {
+            console.error('Error adding OSM Buildings:', error);
+        }
+    }
 }
