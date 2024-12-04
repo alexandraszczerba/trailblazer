@@ -1,4 +1,4 @@
-// maketrail.js
+/ maketrail.js
 
 /**
  * Initializes the 3D Map with trail creation functionality.
