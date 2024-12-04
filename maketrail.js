@@ -29,12 +29,6 @@ export function initialize3DMap(viewer) {
         }
     }
 
-    // Shared arrays and variables to keep track of trail points, entities, and total distance
-    const activeTrailPoints = [];
-    const pointEntities = [];
-    let trailPolyline = null;
-    let totalDistance = 0; // In meters
-
     /**
      * Adds a labeled marker at the specified Cartesian3 position.
      * @param {Cesium.Cartesian3} position - The position to place the marker.
@@ -61,6 +55,13 @@ export function initialize3DMap(viewer) {
         });
         pointEntities.push(entity);
     }
+
+    // Shared arrays and variables to keep track of trail points, entities, segments, and total distance
+    const activeTrailPoints = [];
+    const pointEntities = [];
+    let trailPolyline = null;
+    let totalDistance = 0; // In meters
+    const trailSegments = []; // Array to store segment data
 
     /**
      * Initializes the trail creation functionality.
@@ -116,6 +117,19 @@ export function initialize3DMap(viewer) {
                         const distance = Cesium.Cartesian3.distance(point1, point2); // Distance in meters
                         totalDistance += distance;
 
+                        // Store segment data
+                        const segment = {
+                            from: `Point ${lastIndex}`,
+                            to: `Point ${lastIndex + 1}`,
+                            distance: distance.toFixed(2), // in meters
+                            elevationStart: await getElevation(point1),
+                            elevationEnd: elevation
+                        };
+                        trailSegments.push(segment);
+
+                        // Update the dropdown menu with the new segment
+                        populateSegmentDropdown();
+
                         // Update the info box with elevation, distance from previous point, and total distance
                         updateInfoBox(`
                             <strong>Last Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
@@ -123,7 +137,7 @@ export function initialize3DMap(viewer) {
                             <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                         `);
                     } else {
-                        // Only one point added, display elevation
+                        // Only one point added, display elevation and total distance
                         updateInfoBox(`
                             <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
                             <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
@@ -143,6 +157,61 @@ export function initialize3DMap(viewer) {
             handler.destroy();
             updateInfoBox("Trail creation finalized. You can use 'Undo' or 'Reset' buttons.");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+    }
+
+    /**
+     * Retrieves elevation for a given Cartesian3 point.
+     * @param {Cesium.Cartesian3} cartesian - The Cartesian3 position.
+     * @returns {Promise<number>} - The elevation in meters.
+     */
+    async function getElevation(cartesian) {
+        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        const terrainProvider = viewer.scene.globe.terrainProvider;
+        const positions = [cartographic];
+        const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+        return updatedPositions[0].height || 0;
+    }
+
+    /**
+     * Populates the segment dropdown menu with current trail segments.
+     */
+    function populateSegmentDropdown() {
+        const dropdown = document.getElementById('segmentDropdown');
+        if (!dropdown) return;
+
+        // Clear existing options
+        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
+
+        // Populate with current segments
+        trailSegments.forEach((segment, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.text = `${segment.from} - ${segment.to}`;
+            dropdown.appendChild(option);
+        });
+
+        // Add event listener for selection
+        dropdown.addEventListener('change', function () {
+            const selectedIndex = this.value;
+            if (selectedIndex === "") return;
+
+            const segment = trailSegments[selectedIndex];
+            displaySegmentInfo(segment);
+        });
+    }
+
+    /**
+     * Displays detailed information about a selected trail segment.
+     * @param {Object} segment - The segment data.
+     */
+    function displaySegmentInfo(segment) {
+        updateInfoBox(`
+            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
+            <strong>Distance:</strong> ${segment.distance} meters<br>
+            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
+            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
+            <strong>Elevation Gain:</strong> ${(segment.elevationEnd - segment.elevationStart).toFixed(2)} meters
+        `);
     }
 
     /**
@@ -171,41 +240,48 @@ export function initialize3DMap(viewer) {
                     viewer.entities.remove(lastEntity);
                 }
 
-                // Update polyline positions and total distance
+                // Remove the last segment from trailSegments
+                const removedSegment = trailSegments.pop();
+                if (removedSegment) {
+                    // Subtract the distance of the removed segment from totalDistance
+                    totalDistance -= parseFloat(removedSegment.distance);
+                }
+
+                // Update the polyline trail
                 if (activeTrailPoints.length > 1) {
-                    // Update polyline positions
                     trailPolyline.polyline.positions = activeTrailPoints;
+                } else if (activeTrailPoints.length === 1) {
+                    // Only one point left, remove the polyline
+                    if (trailPolyline) {
+                        viewer.entities.remove(trailPolyline);
+                        trailPolyline = null;
+                    }
+                } else {
+                    // No points left, remove the polyline if it exists
+                    if (trailPolyline) {
+                        viewer.entities.remove(trailPolyline);
+                        trailPolyline = null;
+                    }
+                }
 
-                    // Recalculate distance between new last two points
-                    const lastIndex = activeTrailPoints.length - 1;
-                    const point1 = activeTrailPoints[lastIndex - 1];
-                    const point2 = activeTrailPoints[lastIndex];
-                    const distance = Cesium.Cartesian3.distance(point1, point2);
-                    totalDistance -= distance;
+                // Update the dropdown menu
+                populateSegmentDropdown();
 
-                    // Update the info box
+                // Update the info box
+                if (trailSegments.length > 0) {
+                    const lastSegment = trailSegments[trailSegments.length - 1];
                     updateInfoBox(`
                         <strong>Last Point Removed.</strong><br>
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, remove polyline and update distance
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                    totalDistance = 0;
+                    // Only one point left
                     updateInfoBox(`
-                        <strong>Last Point Removed.</strong><br>
+                        <strong>Point Elevation:</strong> ${await getElevation(activeTrailPoints[0]).toFixed(2)} meters<br>
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else {
-                    // No points left, remove polyline if exists and reset distance
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                    totalDistance = 0;
+                    // No points left
                     updateInfoBox("All points removed. Trail has been cleared.");
                 }
             } else {
@@ -234,9 +310,13 @@ export function initialize3DMap(viewer) {
                 trailPolyline = null;
             }
 
-            // Clear all trail points and reset total distance
+            // Clear all trail points, segments, and reset total distance
             activeTrailPoints.length = 0;
+            trailSegments.length = 0;
             totalDistance = 0;
+
+            // Update the dropdown menu
+            populateSegmentDropdown();
 
             // Update the info box
             updateInfoBox("Trail has been reset.");
@@ -255,10 +335,45 @@ export function initialize3DMap(viewer) {
         }
     }
 
-    // Initialize trail creation and Undo/Reset functionalities
+    /**
+     * Creates a dropdown menu for selecting trail segments.
+     */
+    function createSegmentDropdown() {
+        const infoBox = document.getElementById('infoBox');
+        if (!infoBox) return;
+
+        // Create a container for the dropdown
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.id = 'dropdownContainer';
+        dropdownContainer.style.marginTop = '10px';
+
+        // Create the dropdown label
+        const label = document.createElement('label');
+        label.for = 'segmentDropdown';
+        label.innerHTML = '<strong>Select Trail Segment:</strong> ';
+        dropdownContainer.appendChild(label);
+
+        // Create the dropdown select element
+        const select = document.createElement('select');
+        select.id = 'segmentDropdown';
+        select.style.marginTop = '5px';
+        dropdownContainer.appendChild(select);
+
+        // Insert the dropdown into the info box
+        infoBox.appendChild(dropdownContainer);
+    }
+
+    /**
+     * Initializes the segment dropdown and populates it.
+     */
+    function initializeDropdown() {
+        createSegmentDropdown();
+        populateSegmentDropdown();
+    }
+
+    // Initialize trail creation, Undo/Reset functionalities, and dropdown
     createTrail();
     implementUndoReset(viewer);
-
-    // Initialize Cesium OSM Buildings
     initializeBuildings();
+    initializeDropdown();
 }
