@@ -19,13 +19,24 @@ export function initialize3DMap(viewer) {
     });
 
     /**
-     * Updates the message area within the info box.
+     * Updates the overall message area within the info box.
      * @param {string} message - The message to display.
      */
-    function updateMessageBox(message) {
+    function updateOverallMessage(message) {
         const messageBox = document.getElementById('messageBox');
         if (messageBox) {
             messageBox.innerHTML = message;
+        }
+    }
+
+    /**
+     * Updates the segment-specific information area within the info box.
+     * @param {string} message - The message to display.
+     */
+    function updateSegmentInfo(message) {
+        const segmentInfoBox = document.getElementById('segmentInfoBox');
+        if (segmentInfoBox) {
+            segmentInfoBox.innerHTML = message;
         }
     }
 
@@ -78,7 +89,7 @@ export function initialize3DMap(viewer) {
                 const terrainProvider = viewer.scene.globe.terrainProvider;
 
                 if (!terrainProvider.ready) {
-                    updateMessageBox("<span style='color: red;'>Terrain data is not yet available.</span>");
+                    updateOverallMessage("<span style='color: red;'>Terrain data is not yet available.</span>");
                     return;
                 }
 
@@ -131,32 +142,30 @@ export function initialize3DMap(viewer) {
                         // Populate the dropdown menu with the new segment
                         populateSegmentDropdown();
 
-                        // Update the message box with elevation, distance from previous point, and total distance
-                        updateMessageBox(`
-                            <strong>Last Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
-                            <strong>Distance from Previous Point:</strong> ${distance.toFixed(2)} meters<br>
+                        // Update the overall message box with total distance
+                        updateOverallMessage(`
                             <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                         `);
                     } else {
                         // Only one point added, display elevation and total distance
-                        updateMessageBox(`
+                        updateOverallMessage(`
                             <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
                             <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                         `);
                     }
                 } catch (error) {
                     console.error("Error fetching elevation data:", error);
-                    updateMessageBox("<span style='color: red;'>Error fetching elevation data. See console for details.</span>");
+                    updateOverallMessage("<span style='color: red;'>Error fetching elevation data. See console for details.</span>");
                 }
             } else {
-                updateMessageBox("<span style='color: red;'>Point selection failed. Ensure you are clicking on terrain.</span>");
+                updateOverallMessage("<span style='color: red;'>Point selection failed. Ensure you are clicking on terrain.</span>");
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         // Handle LEFT_DOUBLE_CLICK event to finalize trail creation
         handler.setInputAction(function () {
             handler.destroy();
-            updateMessageBox("Trail creation finalized. You can use 'Undo' or 'Reset' buttons.");
+            updateOverallMessage("Trail creation finalized. You can use 'Undo' or 'Reset' buttons.");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
@@ -221,7 +230,7 @@ export function initialize3DMap(viewer) {
         const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
         const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
 
-        updateMessageBox(`
+        updateSegmentInfo(`
             <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
             <strong>Distance:</strong> ${segment.distance} meters<br>
             <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
@@ -283,33 +292,34 @@ export function initialize3DMap(viewer) {
                 // Update the dropdown menu
                 populateSegmentDropdown();
 
-                // Update the message box
+                // Update the overall message box
                 if (trailSegments.length > 0) {
-                    const lastSegment = trailSegments[trailSegments.length - 1];
-                    updateMessageBox(`
-                        <strong>Last Point Removed.</strong><br>
+                    updateOverallMessage(`
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else if (activeTrailPoints.length === 1) {
                     // Only one point left, display its elevation and total distance
                     const elevation = await getElevation(activeTrailPoints[0]);
-                    updateMessageBox(`
+                    updateOverallMessage(`
                         <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else {
                     // No points left
-                    updateMessageBox("All points removed. Trail has been cleared.");
+                    updateOverallMessage("All points removed. Trail has been cleared.");
                 }
+
+                // Clear segment-specific info if no segment is selected
+                updateSegmentInfo("");
             } else {
-                updateMessageBox("No points to undo.");
+                updateOverallMessage("No points to undo.");
             }
         });
 
         // Reset Button Event Listener
         resetBtn.addEventListener('click', async function () {
             if (activeTrailPoints.length === 0) {
-                updateMessageBox("No points to reset.");
+                updateOverallMessage("No points to reset.");
                 return;
             }
 
@@ -335,693 +345,11 @@ export function initialize3DMap(viewer) {
             // Update the dropdown menu
             populateSegmentDropdown();
 
-            // Update the message box
-            updateMessageBox("Trail has been reset.");
-        });
-    }
-
-    /**
-     * Displays detailed information about a selected trail segment.
-     * @param {Object} segment - The segment data.
-     */
-    function displaySegmentInfo(segment) {
-        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
-        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
-
-        updateMessageBox(`
-            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
-            <strong>Distance:</strong> ${segment.distance} meters<br>
-            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
-            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
-            <strong>Elevation Gain:</strong> ${gainText}
-        `);
-    }
-
-    /**
-     * Populates the segment dropdown menu with current trail segments.
-     */
-    function populateSegmentDropdown() {
-        const dropdown = document.getElementById('segmentDropdown');
-        if (!dropdown) return;
-
-        // Clear existing options except the first placeholder
-        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
-
-        // Populate with current segments
-        trailSegments.forEach((segment, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = `${segment.from} - ${segment.to}`;
-            dropdown.appendChild(option);
-        });
-
-        // Enable dropdown if there are segments
-        if (trailSegments.length > 0) {
-            dropdown.disabled = false;
-        } else {
-            dropdown.disabled = true;
-            dropdown.innerHTML = '<option value="" disabled selected>No segments available</option>';
-        }
-
-        // Remove existing event listeners to prevent multiple bindings
-        const newDropdown = dropdown.cloneNode(true);
-        dropdown.parentNode.replaceChild(newDropdown, dropdown);
-
-        // Add event listener for selection
-        newDropdown.addEventListener('change', function () {
-            const selectedIndex = this.value;
-            if (selectedIndex === "") return;
-
-            const segment = trailSegments[selectedIndex];
-            displaySegmentInfo(segment);
-        });
-    }
-
-    /**
-     * Implements Undo and Reset functionalities for trail management.
-     * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
-     */
-    function implementUndoReset(viewer) {
-        const undoBtn = document.getElementById('undoBtn');
-        const resetBtn = document.getElementById('resetBtn');
-
-        // Ensure buttons exist
-        if (!undoBtn || !resetBtn) {
-            console.warn("Undo or Reset button not found in the DOM.");
-            return;
-        }
-
-        // Undo Button Event Listener
-        undoBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length > 0) {
-                // Remove the last point from activeTrailPoints
-                const removedPoint = activeTrailPoints.pop();
-
-                // Remove the last point entity (marker and label)
-                const lastEntity = pointEntities.pop();
-                if (lastEntity) {
-                    viewer.entities.remove(lastEntity);
-                }
-
-                // Remove the last segment from trailSegments
-                const removedSegment = trailSegments.pop();
-                if (removedSegment) {
-                    // Subtract the distance of the removed segment from totalDistance
-                    totalDistance -= parseFloat(removedSegment.distance);
-                }
-
-                // Update the polyline trail
-                if (activeTrailPoints.length > 1) {
-                    trailPolyline.polyline.positions = activeTrailPoints;
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, remove the polyline
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                } else {
-                    // No points left, remove the polyline if it exists
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                }
-
-                // Update the dropdown menu
-                populateSegmentDropdown();
-
-                // Update the message box
-                if (trailSegments.length > 0) {
-                    const lastSegment = trailSegments[trailSegments.length - 1];
-                    updateMessageBox(`
-                        <strong>Last Point Removed.</strong><br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, display its elevation and total distance
-                    const elevation = await getElevation(activeTrailPoints[0]);
-                    updateMessageBox(`
-                        <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else {
-                    // No points left
-                    updateMessageBox("All points removed. Trail has been cleared.");
-                }
-            } else {
-                updateMessageBox("No points to undo.");
-            }
-        });
-
-        // Reset Button Event Listener
-        resetBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length === 0) {
-                updateMessageBox("No points to reset.");
-                return;
-            }
-
-            // Remove all point entities (markers and labels)
-            while (pointEntities.length > 0) {
-                const entity = pointEntities.pop();
-                if (entity) {
-                    viewer.entities.remove(entity);
-                }
-            }
-
-            // Remove the polyline trail
-            if (trailPolyline) {
-                viewer.entities.remove(trailPolyline);
-                trailPolyline = null;
-            }
-
-            // Clear all trail points, segments, and reset total distance
-            activeTrailPoints.length = 0;
-            trailSegments.length = 0;
-            totalDistance = 0;
-
-            // Update the dropdown menu
-            populateSegmentDropdown();
-
-            // Update the message box
-            updateMessageBox("Trail has been reset.");
-        });
-    }
-
-    /**
-     * Displays detailed information about a selected trail segment.
-     * @param {Object} segment - The segment data.
-     */
-    function displaySegmentInfo(segment) {
-        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
-        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
-
-        updateMessageBox(`
-            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
-            <strong>Distance:</strong> ${segment.distance} meters<br>
-            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
-            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
-            <strong>Elevation Gain:</strong> ${gainText}
-        `);
-    }
-
-    /**
-     * Populates the segment dropdown menu with current trail segments.
-     */
-    function populateSegmentDropdown() {
-        const dropdown = document.getElementById('segmentDropdown');
-        if (!dropdown) return;
-
-        // Clear existing options except the first placeholder
-        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
-
-        // Populate with current segments
-        trailSegments.forEach((segment, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = `${segment.from} - ${segment.to}`;
-            dropdown.appendChild(option);
-        });
-
-        // Enable dropdown if there are segments
-        if (trailSegments.length > 0) {
-            dropdown.disabled = false;
-        } else {
-            dropdown.disabled = true;
-            dropdown.innerHTML = '<option value="" disabled selected>No segments available</option>';
-        }
-
-        // Remove existing event listeners to prevent multiple bindings
-        const newDropdown = dropdown.cloneNode(true);
-        dropdown.parentNode.replaceChild(newDropdown, dropdown);
-
-        // Add event listener for selection
-        newDropdown.addEventListener('change', function () {
-            const selectedIndex = this.value;
-            if (selectedIndex === "") return;
-
-            const segment = trailSegments[selectedIndex];
-            displaySegmentInfo(segment);
-        });
-    }
-
-    /**
-     * Implements Undo and Reset functionalities for trail management.
-     * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
-     */
-    function implementUndoReset(viewer) {
-        const undoBtn = document.getElementById('undoBtn');
-        const resetBtn = document.getElementById('resetBtn');
-
-        // Ensure buttons exist
-        if (!undoBtn || !resetBtn) {
-            console.warn("Undo or Reset button not found in the DOM.");
-            return;
-        }
-
-        // Undo Button Event Listener
-        undoBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length > 0) {
-                // Remove the last point from activeTrailPoints
-                const removedPoint = activeTrailPoints.pop();
-
-                // Remove the last point entity (marker and label)
-                const lastEntity = pointEntities.pop();
-                if (lastEntity) {
-                    viewer.entities.remove(lastEntity);
-                }
-
-                // Remove the last segment from trailSegments
-                const removedSegment = trailSegments.pop();
-                if (removedSegment) {
-                    // Subtract the distance of the removed segment from totalDistance
-                    totalDistance -= parseFloat(removedSegment.distance);
-                }
-
-                // Update the polyline trail
-                if (activeTrailPoints.length > 1) {
-                    trailPolyline.polyline.positions = activeTrailPoints;
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, remove the polyline
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                } else {
-                    // No points left, remove the polyline if it exists
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                }
-
-                // Update the dropdown menu
-                populateSegmentDropdown();
-
-                // Update the message box
-                if (trailSegments.length > 0) {
-                    const lastSegment = trailSegments[trailSegments.length - 1];
-                    updateMessageBox(`
-                        <strong>Last Point Removed.</strong><br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, display its elevation and total distance
-                    const elevation = await getElevation(activeTrailPoints[0]);
-                    updateMessageBox(`
-                        <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else {
-                    // No points left
-                    updateMessageBox("All points removed. Trail has been cleared.");
-                }
-            } else {
-                updateMessageBox("No points to undo.");
-            }
-        });
-
-        // Reset Button Event Listener
-        resetBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length === 0) {
-                updateMessageBox("No points to reset.");
-                return;
-            }
-
-            // Remove all point entities (markers and labels)
-            while (pointEntities.length > 0) {
-                const entity = pointEntities.pop();
-                if (entity) {
-                    viewer.entities.remove(entity);
-                }
-            }
-
-            // Remove the polyline trail
-            if (trailPolyline) {
-                viewer.entities.remove(trailPolyline);
-                trailPolyline = null;
-            }
-
-            // Clear all trail points, segments, and reset total distance
-            activeTrailPoints.length = 0;
-            trailSegments.length = 0;
-            totalDistance = 0;
-
-            // Update the dropdown menu
-            populateSegmentDropdown();
-
-            // Update the message box
-            updateMessageBox("Trail has been reset.");
-        });
-    }
-
-    /**
-     * Displays detailed information about a selected trail segment.
-     * @param {Object} segment - The segment data.
-     */
-    function displaySegmentInfo(segment) {
-        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
-        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
-
-        updateMessageBox(`
-            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
-            <strong>Distance:</strong> ${segment.distance} meters<br>
-            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
-            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
-            <strong>Elevation Gain:</strong> ${gainText}
-        `);
-    }
-
-    /**
-     * Populates the segment dropdown menu with current trail segments.
-     */
-    function populateSegmentDropdown() {
-        const dropdown = document.getElementById('segmentDropdown');
-        if (!dropdown) return;
-
-        // Clear existing options except the first placeholder
-        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
-
-        // Populate with current segments
-        trailSegments.forEach((segment, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = `${segment.from} - ${segment.to}`;
-            dropdown.appendChild(option);
-        });
-
-        // Enable dropdown if there are segments
-        if (trailSegments.length > 0) {
-            dropdown.disabled = false;
-        } else {
-            dropdown.disabled = true;
-            dropdown.innerHTML = '<option value="" disabled selected>No segments available</option>';
-        }
-
-        // Remove existing event listeners to prevent multiple bindings
-        const newDropdown = dropdown.cloneNode(true);
-        dropdown.parentNode.replaceChild(newDropdown, dropdown);
-
-        // Add event listener for selection
-        newDropdown.addEventListener('change', function () {
-            const selectedIndex = this.value;
-            if (selectedIndex === "") return;
-
-            const segment = trailSegments[selectedIndex];
-            displaySegmentInfo(segment);
-        });
-    }
-
-    /**
-     * Implements Undo and Reset functionalities for trail management.
-     * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
-     */
-    function implementUndoReset(viewer) {
-        const undoBtn = document.getElementById('undoBtn');
-        const resetBtn = document.getElementById('resetBtn');
-
-        // Ensure buttons exist
-        if (!undoBtn || !resetBtn) {
-            console.warn("Undo or Reset button not found in the DOM.");
-            return;
-        }
-
-        // Undo Button Event Listener
-        undoBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length > 0) {
-                // Remove the last point from activeTrailPoints
-                const removedPoint = activeTrailPoints.pop();
-
-                // Remove the last point entity (marker and label)
-                const lastEntity = pointEntities.pop();
-                if (lastEntity) {
-                    viewer.entities.remove(lastEntity);
-                }
-
-                // Remove the last segment from trailSegments
-                const removedSegment = trailSegments.pop();
-                if (removedSegment) {
-                    // Subtract the distance of the removed segment from totalDistance
-                    totalDistance -= parseFloat(removedSegment.distance);
-                }
-
-                // Update the polyline trail
-                if (activeTrailPoints.length > 1) {
-                    trailPolyline.polyline.positions = activeTrailPoints;
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, remove the polyline
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                } else {
-                    // No points left, remove the polyline if it exists
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                }
-
-                // Update the dropdown menu
-                populateSegmentDropdown();
-
-                // Update the message box
-                if (trailSegments.length > 0) {
-                    const lastSegment = trailSegments[trailSegments.length - 1];
-                    updateMessageBox(`
-                        <strong>Last Point Removed.</strong><br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, display its elevation and total distance
-                    const elevation = await getElevation(activeTrailPoints[0]);
-                    updateMessageBox(`
-                        <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else {
-                    // No points left
-                    updateMessageBox("All points removed. Trail has been cleared.");
-                }
-            } else {
-                updateMessageBox("No points to undo.");
-            }
-        });
-
-        // Reset Button Event Listener
-        resetBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length === 0) {
-                updateMessageBox("No points to reset.");
-                return;
-            }
-
-            // Remove all point entities (markers and labels)
-            while (pointEntities.length > 0) {
-                const entity = pointEntities.pop();
-                if (entity) {
-                    viewer.entities.remove(entity);
-                }
-            }
-
-            // Remove the polyline trail
-            if (trailPolyline) {
-                viewer.entities.remove(trailPolyline);
-                trailPolyline = null;
-            }
-
-            // Clear all trail points, segments, and reset total distance
-            activeTrailPoints.length = 0;
-            trailSegments.length = 0;
-            totalDistance = 0;
-
-            // Update the dropdown menu
-            populateSegmentDropdown();
-
-            // Update the message box
-            updateMessageBox("Trail has been reset.");
-        });
-    }
-
-    /**
-     * Displays detailed information about a selected trail segment.
-     * @param {Object} segment - The segment data.
-     */
-    function displaySegmentInfo(segment) {
-        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
-        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
-
-        updateMessageBox(`
-            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
-            <strong>Distance:</strong> ${segment.distance} meters<br>
-            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
-            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
-            <strong>Elevation Gain:</strong> ${gainText}
-        `);
-    }
-
-    /**
-     * Populates the segment dropdown menu with current trail segments.
-     */
-    function populateSegmentDropdown() {
-        const dropdown = document.getElementById('segmentDropdown');
-        if (!dropdown) return;
-
-        // Clear existing options except the first placeholder
-        dropdown.innerHTML = '<option value="" disabled selected>Select a trail segment</option>';
-
-        // Populate with current segments
-        trailSegments.forEach((segment, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.text = `${segment.from} - ${segment.to}`;
-            dropdown.appendChild(option);
-        });
-
-        // Enable dropdown if there are segments
-        if (trailSegments.length > 0) {
-            dropdown.disabled = false;
-        } else {
-            dropdown.disabled = true;
-            dropdown.innerHTML = '<option value="" disabled selected>No segments available</option>';
-        }
-
-        // Remove existing event listeners to prevent multiple bindings
-        const newDropdown = dropdown.cloneNode(true);
-        dropdown.parentNode.replaceChild(newDropdown, dropdown);
-
-        // Add event listener for selection
-        newDropdown.addEventListener('change', function () {
-            const selectedIndex = this.value;
-            if (selectedIndex === "") return;
-
-            const segment = trailSegments[selectedIndex];
-            displaySegmentInfo(segment);
-        });
-    }
-
-    /**
-     * Displays detailed information about a selected trail segment.
-     * @param {Object} segment - The segment data.
-     */
-    function displaySegmentInfo(segment) {
-        const elevationGain = (segment.elevationEnd - segment.elevationStart).toFixed(2);
-        const gainText = elevationGain >= 0 ? `${elevationGain} meters` : `${Math.abs(elevationGain)} meters (Loss)`;
-
-        updateMessageBox(`
-            <strong>Segment:</strong> ${segment.from} - ${segment.to}<br>
-            <strong>Distance:</strong> ${segment.distance} meters<br>
-            <strong>Elevation Start:</strong> ${segment.elevationStart.toFixed(2)} meters<br>
-            <strong>Elevation End:</strong> ${segment.elevationEnd.toFixed(2)} meters<br>
-            <strong>Elevation Gain:</strong> ${gainText}
-        `);
-    }
-
-    /**
-     * Implements Undo and Reset functionalities for trail management.
-     * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
-     */
-    function implementUndoReset(viewer) {
-        const undoBtn = document.getElementById('undoBtn');
-        const resetBtn = document.getElementById('resetBtn');
-
-        // Ensure buttons exist
-        if (!undoBtn || !resetBtn) {
-            console.warn("Undo or Reset button not found in the DOM.");
-            return;
-        }
-
-        // Undo Button Event Listener
-        undoBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length > 0) {
-                // Remove the last point from activeTrailPoints
-                const removedPoint = activeTrailPoints.pop();
-
-                // Remove the last point entity (marker and label)
-                const lastEntity = pointEntities.pop();
-                if (lastEntity) {
-                    viewer.entities.remove(lastEntity);
-                }
-
-                // Remove the last segment from trailSegments
-                const removedSegment = trailSegments.pop();
-                if (removedSegment) {
-                    // Subtract the distance of the removed segment from totalDistance
-                    totalDistance -= parseFloat(removedSegment.distance);
-                }
-
-                // Update the polyline trail
-                if (activeTrailPoints.length > 1) {
-                    trailPolyline.polyline.positions = activeTrailPoints;
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, remove the polyline
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                } else {
-                    // No points left, remove the polyline if it exists
-                    if (trailPolyline) {
-                        viewer.entities.remove(trailPolyline);
-                        trailPolyline = null;
-                    }
-                }
-
-                // Update the dropdown menu
-                populateSegmentDropdown();
-
-                // Update the message box
-                if (trailSegments.length > 0) {
-                    const lastSegment = trailSegments[trailSegments.length - 1];
-                    updateMessageBox(`
-                        <strong>Last Point Removed.</strong><br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else if (activeTrailPoints.length === 1) {
-                    // Only one point left, display its elevation and total distance
-                    const elevation = await getElevation(activeTrailPoints[0]);
-                    updateMessageBox(`
-                        <strong>Point Elevation:</strong> ${elevation.toFixed(2)} meters<br>
-                        <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
-                    `);
-                } else {
-                    // No points left
-                    updateMessageBox("All points removed. Trail has been cleared.");
-                }
-            } else {
-                updateMessageBox("No points to undo.");
-            }
-        });
-
-        // Reset Button Event Listener
-        resetBtn.addEventListener('click', async function () {
-            if (activeTrailPoints.length === 0) {
-                updateMessageBox("No points to reset.");
-                return;
-            }
-
-            // Remove all point entities (markers and labels)
-            while (pointEntities.length > 0) {
-                const entity = pointEntities.pop();
-                if (entity) {
-                    viewer.entities.remove(entity);
-                }
-            }
-
-            // Remove the polyline trail
-            if (trailPolyline) {
-                viewer.entities.remove(trailPolyline);
-                trailPolyline = null;
-            }
-
-            // Clear all trail points, segments, and reset total distance
-            activeTrailPoints.length = 0;
-            trailSegments.length = 0;
-            totalDistance = 0;
-
-            // Update the dropdown menu
-            populateSegmentDropdown();
-
-            // Update the message box
-            updateMessageBox("Trail has been reset.");
+            // Update the overall message box
+            updateOverallMessage("Trail has been reset.");
+
+            // Clear segment-specific info
+            updateSegmentInfo("");
         });
     }
 
