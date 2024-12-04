@@ -29,9 +29,20 @@
             border-radius: 5px;
             z-index: 10;
             font-size: 14px;
-            min-width: 250px; /* Increased width to accommodate dropdown */
+            min-width: 300px; /* Increased width to accommodate dropdown */
         }
 
+        /* Container for trail messages */
+        #messageBox {
+            margin-bottom: 15px;
+        }
+
+        /* Container for the dropdown */
+        #segmentDropdownContainer {
+            margin-top: 10px;
+        }
+
+        /* Styling for buttons */
         #homeBtn {
             position: absolute;
             top: 10px;
@@ -73,11 +84,7 @@
             cursor: pointer;
         }
 
-        /* Styling for the dropdown container */
-        #segmentDropdownContainer {
-            margin-top: 15px;
-        }
-
+        /* Styling for the dropdown */
         #segmentDropdown {
             width: 100%;
             padding: 5px;
@@ -102,7 +109,9 @@
 
     <!-- Info box -->
     <div id="infoBox">
-        <p>Click on the map to add points.</p>
+        <!-- Message area -->
+        <div id="messageBox">Click on the map to add points.</div>
+
         <!-- Dropdown for trail segments -->
         <div id="segmentDropdownContainer">
             <label for="segmentDropdown"><strong>Select Trail Segment:</strong></label><br>
