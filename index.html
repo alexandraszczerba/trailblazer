@@ -1,191 +1,1405 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <!-- Include the CesiumJS JavaScript and CSS files -->
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-  <title>Main Cesium Map</title>
-  <style>
-    /* Your existing styles */
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      font-family: Arial, sans-serif;
-    }
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Main Cesium Map</title>
+  <style>
+    #trailInfoBox {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
 
-    #cesiumContainer {
-      width: 100%;
-      height: 100vh;
-    }
+    #trailInfoBox h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-    #createTrailBtn {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 14px;
-    }
+    #trailPhotos img {
+      width: 80px;
+      height: 80px;
+      border-radius: 5px;
+    }
+    
+    #cesium-infoBox {
+    max-height: none !important; /* Remove max-height restriction */
+    height: auto !important;    /* Allow height to adjust to content */
+  }
 
-    #homeBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000;
-      padding: 10px 30px;
-      background-color: #28a745;
-      color: white;
-      text-decoration: none;
-      font-size: 14px;
-      border-radius: 5px;
-    }
 
-    /* Trail Info Box Styles */
-    #trailInfoBox {
-      display: none;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background-color: white;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-      width: 300px;
-    }
+    /* Improved button styles */
+    #createTrailBtn, #homeBtn {
+      position: absolute;
+      top: 10px;
+      z-index: 1000;
+      padding: 12px 30px;
+      background: linear-gradient(90deg, #28a745, #1e7e34);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-    #trailInfoBox h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
-    }
+    #createTrailBtn:hover, #homeBtn:hover {
+      background: linear-gradient(90deg, #1e7e34, #155724);
+      transform: scale(1.05);
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+    }
 
-    #trailPhotos img {
-      width: 80px;
-      height: 80px;
-      border-radius: 5px;
-    }
-  </style>
+    #createTrailBtn {
+      left: 10px;
+    }
+
+    #homeBtn {
+      right: 10px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Button to create a trail -->
-  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
+  <!-- Button to create a trail -->
+  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
 
-  <!-- Link to go back to the homepage -->
-  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+  <!-- Link to go back to the homepage -->
+  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
 
-  <!-- Cesium container -->
-  <div id="cesiumContainer"></div>
+  <!-- Cesium container -->
+  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
 
-  <!-- Trail info box -->
-  <div id="trailInfoBox">
-    <h3 id="trailName"></h3>
-    <p id="trailDetails"></p>
-    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
-  </div>
+  <!-- Trail info box -->
+  <div id="trailInfoBox">
+    <h3 id="trailName"></h3>
+    <p id="trailDetails"></p>
+    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
+  </div>
 
-  <script>
-    // Set your Cesium Ion access token here
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+  <script>
+    // Set your Cesium Ion access token here
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMDM4MDVjNS0wY2M2LTQ4YWMtYjhiMi0xNjlhOGI2ODg1MTciLCJpZCI6MjU5NjA5LCJpYXQiOjE3MzMyMDMwOTZ9.Ls8RFhPfPH6746bGel4F4Yb9oVOMZn8cbq_TUCnIH8c';
 
-    // Initialize the Cesium viewer
-    const viewer = new Cesium.Viewer('cesiumContainer', {
-      terrainProvider: Cesium.createWorldTerrain(),
-      timeline: false,
-      animation: false,
-    });
+    // Initialize the Cesium viewer
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain(),
+      timeline: false,
+      animation: false,
+    });
 
-    // Fly to the initial view
-    viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-      orientation: {
-        heading: Cesium.Math.toRadians(0.0),
-        pitch: Cesium.Math.toRadians(-15.0),
-      },
-      duration: 2
-    });
+    // Fly to the initial view
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+      orientation: {
+        heading: Cesium.Math.toRadians(0.0),
+        pitch: Cesium.Math.toRadians(-15.0),
+      },
+    });
 
-    // Define trailheads
-    const trailheads = [
-      {
-        name: "Icehouse Canyon Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500),
-        details: {
-          difficulty: "8/10",
-          distance: "8 miles",
-          maxElevation: "9399 feet",
-          notes: "Windy/Cold weather. Be cautious of ice and snow during winter.",
-        },
-      },
-      {
-        name: "Baldy Bowl Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
-        details: {
-          difficulty: "6/10",
-          distance: "7 miles",
-          maxElevation: "8600 feet",
-          notes: "Great trail for summer hikes.",
-        },
-      },
-      {
-        name: "Devil's Backbone Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050),
-        details: {
-          difficulty: "10/10",
-          distance: "13.1 miles",
-          maxElevation: "10200 feet",
-          notes: "Be super cautious when hiking. Steep drops with recent reports of casualties.",
-        },
-      },
-      {
-        name: "Manker Campground Trailhead",
-        position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900),
-        details: {
-          difficulty: "7/10",
-          distance: "11.3 miles",
-          maxElevation: "6000 feet",
-          notes: "Significant elevation gain and steep terrain.",
-        },
-      },
-    ];
+    // Adjust the info box height dynamically when a new entity is selected
+viewer.selectedEntityChanged.addEventListener((entity) => {
+  if (entity) {
+    setTimeout(() => {
+      const infoBoxElement = document.querySelector('.cesium-infoBox');
+      const descriptionElement = document.querySelector('.cesium-infoBox-description');
 
-    // Add trailheads
-    trailheads.forEach((trailhead) => {
-      const entity = viewer.entities.add({
-        name: trailhead.name,
-        position: trailhead.position,
-        point: {
-          pixelSize: 10,
-          color: Cesium.Color.BLUE,
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 2,
-        },
-        label: {
-          text: trailhead.name,
-          font: '14pt monospace',
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -10),
-        },
-      });
+      if (infoBoxElement && descriptionElement) {
+        // Adjust the height of the info box to fit its content
+        infoBoxElement.style.height = `${descriptionElement.scrollHeight + 40}px`; // Add padding for extra space
+        infoBoxElement.style.maxHeight = 'none'; // Remove height restriction
+      }
+    }, 100); // Timeout ensures the content is fully rendered before resizing
+  }
+});
 
-      // Add description box logic
-      entity.description = `
-        <strong>Difficulty:</strong> ${trailhead.details.difficulty}<br>
-        <strong>Distance:</strong> ${trailhead.details.distance}<br>
-        <strong>Max Elevation:</strong> ${trailhead.details.maxElevation}<br>
-        <strong>Notes:</strong> ${trailhead.details.notes}
-      `;
-    });
-  </script>
+
+    // Define trailheads
+    const trailheads = [
+      {
+        name: "Icehouse Canyon Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6397, 34.2501, 1500),
+        details: {
+          difficulty: "8/10",
+          distance: "8 miles",
+          maxElevation: "9399 feet",
+          notes: "Windy/Cold weather. Be cautious of ice and snow during winter.",
+          image: "/photo3.jpg",
+        },
+      },
+      {
+        name: "Baldy Bowl Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6476, 34.2889, 3050),
+        details: {
+          difficulty: "6/10",
+          distance: "7 miles",
+          maxElevation: "8600 feet",
+          notes: "Great trail for summer hikes.",
+          image: '/baldy2.jpg'
+          
+        },
+      },
+      {
+        name: "Devil's Backbone Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6432, 34.2880, 3050),
+        details: {
+          difficulty: "10/10",
+          distance: "13.1 miles",
+          maxElevation: "10200 feet",
+          notes: "Be super cautious when hiking. Steep drops with recent reports of casualties.",
+          image: '/backbone2.jpg'
+        },
+      },
+      {
+        name: "Manker Campground Trailhead",
+        position: Cesium.Cartesian3.fromDegrees(-117.6259, 34.2663, 1900),
+        details: {
+          difficulty: "7/10",
+          distance: "11.3 miles",
+          maxElevation: "6000 feet",
+          notes: "Significant elevation gain and steep terrain.",
+        },
+      },
+      // Everest
+      {
+        name: "Lukla Trailhead (Everest Base Camp)",
+        position: Cesium.Cartesian3.fromDegrees(86.7314, 27.6880, 2900),
+        details: {
+          difficulty: "9/10",
+          distance: "38.5 miles (to Base Camp)",
+          maxElevation: "5,364 meters (17,598 feet)",
+          notes: "Gateway to the Everest Base Camp trek. Be prepared for altitude acclimatization.",
+        },
+      },
+      {
+        name: "Jiri Trailhead (Classic Route to Everest)",
+        position: Cesium.Cartesian3.fromDegrees(86.2263, 27.6340, 1950),
+        details: {
+          difficulty: "10/10",
+          distance: "124 miles (to Base Camp)",
+          maxElevation: "5,364 meters (17,598 feet)",
+          notes: "A longer, traditional route with stunning scenery and cultural experiences.",
+        },
+      },
+      {
+        name: "Phaplu Trailhead (Alternative to Lukla)",
+        position: Cesium.Cartesian3.fromDegrees(86.5833, 27.5167, 2470),
+        details: {
+          difficulty: "8/10",
+          distance: "80 miles (to Base Camp)",
+          maxElevation: "5,364 meters (17,598 feet)",
+          notes: "Less crowded than Lukla but involves a longer trek to reach Base Camp.",
+        },
+      },
+      {
+        name: "Tumlingtar Trailhead (Arun Valley Trek)",
+        position: Cesium.Cartesian3.fromDegrees(87.2000, 27.3000, 570),
+        details: {
+          difficulty: "10/10",
+          distance: "115 miles (to Base Camp)",
+          maxElevation: "5,364 meters (17,598 feet)",
+          notes: "Challenging trail offering a unique perspective through the Arun Valley.",
+        },
+      },
+      {
+        name: "Salleri Trailhead (Alternative Starting Point)",
+        position: Cesium.Cartesian3.fromDegrees(86.5678, 27.5615, 2470),
+        details: {
+          difficulty: "8/10",
+          distance: "75 miles (to Base Camp)",
+          maxElevation: "5,364 meters (17,598 feet)",
+          notes: "A great option for those avoiding flights to Lukla. Enjoy scenic landscapes.",
+        },
+      },
+      // Yosemite
+      {
+    name: "Happy Isles Trailhead (Mist Trail to Half Dome)",
+    position: Cesium.Cartesian3.fromDegrees(-119.5587, 37.7326, 1275),
+    details: {
+      difficulty: "9/10",
+      distance: "14-16 miles (round trip to Half Dome)",
+      maxElevation: "8,836 feet",
+      notes: "Permit required for Half Dome. Stunning views of Vernal and Nevada Falls.",
+    },
+  },
+  {
+    name: "Glacier Point Trailhead (Panorama Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-119.5735, 37.7304, 2260),
+    details: {
+      difficulty: "7/10",
+      distance: "8.5 miles (to Yosemite Valley)",
+      maxElevation: "7,215 feet",
+      notes: "Panoramic views of Half Dome and Yosemite Valley. Popular for sunrise/sunset.",
+    },
+  },
+  {
+    name: "Yosemite Falls Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-119.5967, 37.7485, 1290),
+    details: {
+      difficulty: "8/10",
+      distance: "7.2 miles (round trip)",
+      maxElevation: "6,526 feet",
+      notes: "Steep ascent with breathtaking views of the tallest waterfall in North America.",
+    },
+  },
+  {
+    name: "Four Mile Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-119.5986, 37.7361, 1290),
+    details: {
+      difficulty: "8/10",
+      distance: "4.8 miles (one way)",
+      maxElevation: "7,214 feet",
+      notes: "Leads to Glacier Point. Fantastic views of Yosemite Valley and El Capitan.",
+    },
+  },
+  {
+    name: "Tuolumne Meadows Trailhead (John Muir Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-119.3593, 37.8755, 2685),
+    details: {
+      difficulty: "9/10",
+      distance: "30+ miles (to Yosemite Valley or beyond)",
+      maxElevation: "11,056 feet (Donohue Pass)",
+      notes: "Starting point for the John Muir Trail. Stunning alpine scenery.",
+    },
+  },
+  {
+    name: "Mirror Lake Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-119.5562, 37.7374, 1290),
+    details: {
+      difficulty: "3/10",
+      distance: "2 miles (round trip to Mirror Lake)",
+      maxElevation: "1,220 feet",
+      notes: "Easy hike with serene views of Mirror Lake and Half Dome reflections.",
+    },
+  },
+  {
+    name: "Sentinel Dome Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-119.5841, 37.7182, 2515),
+    details: {
+      difficulty: "5/10",
+      distance: "2.2 miles (round trip)",
+      maxElevation: "8,122 feet",
+      notes: "Short hike with panoramic views of Yosemite Valley and surrounding peaks.",
+    },
+  },
+  {
+    name: "Cathedral Lakes Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-119.3525, 37.8717, 2630),
+    details: {
+      difficulty: "7/10",
+      distance: "7 miles (round trip)",
+      maxElevation: "9,288 feet",
+      notes: "Part of the John Muir Trail. Spectacular alpine lakes and granite peaks.",
+    },
+  },
+  // Machu Picchu
+  {
+    name: "Km 82 Trailhead (Classic Inca Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-72.2700, -13.2200, 2675),
+    details: {
+      difficulty: "9/10",
+      distance: "26 miles (to Machu Picchu)",
+      maxElevation: "4,200 meters (13,780 feet)",
+      notes: "Permit required. A multi-day trek with stunning archaeological sites and views.",
+    },
+  },
+  {
+    name: "Km 104 Trailhead (Short Inca Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-72.5400, -13.1580, 2175),
+    details: {
+      difficulty: "6/10",
+      distance: "6 miles (to Machu Picchu)",
+      maxElevation: "2,720 meters (8,920 feet)",
+      notes: "Ideal for those short on time. Features beautiful scenery and Wiñay Wayna ruins.",
+    },
+  },
+  {
+    name: "Mollepata Trailhead (Salkantay Trek)",
+    position: Cesium.Cartesian3.fromDegrees(-72.5810, -13.5110, 2975),
+    details: {
+      difficulty: "10/10",
+      distance: "45 miles (to Machu Picchu)",
+      maxElevation: "4,650 meters (15,255 feet)",
+      notes: "Challenging alternative to the Inca Trail. Stunning high-altitude landscapes.",
+    },
+  },
+  {
+    name: "Lares Trailhead (Lares Trek)",
+    position: Cesium.Cartesian3.fromDegrees(-72.0650, -13.2960, 3275),
+    details: {
+      difficulty: "8/10",
+      distance: "21 miles (to Ollantaytambo/Machu Picchu via train)",
+      maxElevation: "4,420 meters (14,500 feet)",
+      notes: "A cultural trek through remote Andean villages. Less crowded than the Inca Trail.",
+    },
+  },
+  {
+    name: "Choquequirao Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-72.8670, -13.3350, 2975),
+    details: {
+      difficulty: "10/10",
+      distance: "40 miles (round trip to Choquequirao)",
+      maxElevation: "3,050 meters (10,006 feet)",
+      notes: "Known as the 'sister city' of Machu Picchu. Spectacular yet challenging trek.",
+    },
+  },
+  // Sedona
+  {
+    name: "Cathedral Rock Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.7951, 34.8214, 1600),
+    details: {
+      difficulty: "7/10",
+      distance: "1.2 miles (round trip)",
+      maxElevation: "4,967 feet",
+      notes: "Short but steep hike. Incredible views of Sedona's red rock formations.",
+    },
+  },
+  {
+    name: "Devil's Bridge Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.8121, 34.9022, 1700),
+    details: {
+      difficulty: "6/10",
+      distance: "4 miles (round trip)",
+      maxElevation: "5,400 feet",
+      notes: "Famous natural sandstone arch. Great for photos but can be crowded.",
+    },
+  },
+  {
+    name: "Bell Rock Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.7665, 34.8007, 1500),
+    details: {
+      difficulty: "4/10",
+      distance: "1 mile (one way, to Bell Rock base)",
+      maxElevation: "4,850 feet",
+      notes: "Beginner-friendly hike. Offers stunning views and optional climbing.",
+    },
+  },
+  {
+    name: "Soldier Pass Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.7840, 34.8773, 1620),
+    details: {
+      difficulty: "6/10",
+      distance: "4.5 miles (round trip)",
+      maxElevation: "5,150 feet",
+      notes: "Scenic trail with Devil's Kitchen sinkhole and Seven Sacred Pools.",
+    },
+  },
+  {
+    name: "Boynton Canyon Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.8446, 34.9033, 1600),
+    details: {
+      difficulty: "7/10",
+      distance: "6.1 miles (round trip)",
+      maxElevation: "5,175 feet",
+      notes: "Gorgeous canyon hike with shaded paths and stunning red rock walls.",
+    },
+  },
+  {
+    name: "Airport Mesa Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.7880, 34.8560, 1520),
+    details: {
+      difficulty: "5/10",
+      distance: "3.5 miles (loop)",
+      maxElevation: "4,823 feet",
+      notes: "360-degree views of Sedona. Popular for sunrise and sunset hikes.",
+    },
+  },
+  {
+    name: "West Fork Trailhead (Oak Creek Canyon)",
+    position: Cesium.Cartesian3.fromDegrees(-111.7487, 34.9953, 1700),
+    details: {
+      difficulty: "5/10",
+      distance: "7 miles (round trip)",
+      maxElevation: "5,380 feet",
+      notes: "Beautiful creekside hike with shaded forest trails and water crossings.",
+    },
+  },
+  {
+    name: "Red Rock Crossing Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-111.8305, 34.8216, 1520),
+    details: {
+      difficulty: "3/10",
+      distance: "2 miles (round trip)",
+      maxElevation: "4,823 feet",
+      notes: "Easy walk with iconic views of Cathedral Rock and access to Oak Creek.",
+    },
+  },
+  // Zion
+  {
+    name: "Angels Landing Trailhead (The Grotto)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9513, 37.2594, 1400),
+    details: {
+      difficulty: "10/10",
+      distance: "5.4 miles (round trip)",
+      maxElevation: "5,790 feet",
+      notes: "Permit required. Steep climbs and narrow ridges with sheer drop-offs. Not for the faint of heart.",
+    },
+  },
+  {
+    name: "The Narrows Trailhead (Temple of Sinawava)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9503, 37.2859, 1288),
+    details: {
+      difficulty: "8/10",
+      distance: "9.4 miles (round trip)",
+      maxElevation: "4,035 feet",
+      notes: "Trail involves hiking through the Virgin River. Check weather for flash flood risks.",
+    },
+  },
+  {
+    name: "Observation Point Trailhead (East Mesa Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9258, 37.2762, 1850),
+    details: {
+      difficulty: "8/10",
+      distance: "7 miles (round trip)",
+      maxElevation: "6,521 feet",
+      notes: "Panoramic views of Zion Canyon. Easier than starting from the canyon floor.",
+    },
+  },
+  {
+    name: "Emerald Pools Trailhead (Zion Lodge)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9641, 37.2481, 1360),
+    details: {
+      difficulty: "4/10",
+      distance: "3 miles (round trip to Upper Pools)",
+      maxElevation: "4,298 feet",
+      notes: "Family-friendly hike with beautiful pools and waterfalls. Can be crowded.",
+    },
+  },
+  {
+    name: "Hidden Canyon Trailhead (Weeping Rock)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9381, 37.2708, 1350),
+    details: {
+      difficulty: "7/10",
+      distance: "2.2 miles (round trip)",
+      maxElevation: "4,265 feet",
+      notes: "Short, steep hike with chains for safety. Scenic slot canyon awaits at the end.",
+    },
+  },
+  {
+    name: "Kolob Canyons Trailhead",
+    position: Cesium.Cartesian3.fromDegrees(-113.2177, 37.4601, 1799),
+    details: {
+      difficulty: "8/10",
+      distance: "14 miles (round trip to Kolob Arch)",
+      maxElevation: "5,770 feet",
+      notes: "Quiet, less crowded area with incredible views and Kolob Arch, one of the largest arches in the world.",
+    },
+  },
+  {
+    name: "Canyon Overlook Trailhead (Zion-Mt. Carmel Highway)",
+    position: Cesium.Cartesian3.fromDegrees(-112.9397, 37.2140, 1630),
+    details: {
+      difficulty: "3/10",
+      distance: "1 mile (round trip)",
+      maxElevation: "5,183 feet",
+      notes: "Short, easy hike with stunning views of Zion Canyon. Great for families.",
+    },
+  },
+  {
+    name: "West Rim Trailhead (Chamberlain's Ranch)",
+    position: Cesium.Cartesian3.fromDegrees(-112.8761, 37.3760, 1900),
+    details: {
+      difficulty: "9/10",
+      distance: "16 miles (one way to The Grotto)",
+      maxElevation: "6,070 feet",
+      notes: "Spectacular vistas and varied terrain. Best for a full-day or overnight hike.",
+    },
+  },
+  // PNW
+  {
+    name: "Mount Si Trailhead (Washington)",
+    position: Cesium.Cartesian3.fromDegrees(-121.7344, 47.4886, 480),
+    details: {
+      difficulty: "8/10",
+      distance: "8 miles (round trip)",
+      maxElevation: "3,900 feet",
+      notes: "Popular trail with steep climbs and stunning views of Snoqualmie Valley.",
+    },
+  },
+  {
+    name: "Rattlesnake Ledge Trailhead (Washington)",
+    position: Cesium.Cartesian3.fromDegrees(-121.7841, 47.4352, 960),
+    details: {
+      difficulty: "6/10",
+      distance: "4 miles (round trip)",
+      maxElevation: "2,078 feet",
+      notes: "Short and steep trail with breathtaking views of Rattlesnake Lake.",
+    },
+  },
+  {
+    name: "Dog Mountain Trailhead (Oregon)",
+    position: Cesium.Cartesian3.fromDegrees(-121.7009, 45.7007, 150),
+    details: {
+      difficulty: "9/10",
+      distance: "6 miles (round trip)",
+      maxElevation: "2,948 feet",
+      notes: "Challenging trail in the Columbia River Gorge. Known for spring wildflowers.",
+    },
+  },
+  {
+    name: "Eagle Creek Trailhead (Oregon)",
+    position: Cesium.Cartesian3.fromDegrees(-121.9160, 45.6304, 190),
+    details: {
+      difficulty: "7/10",
+      distance: "12 miles (round trip to Tunnel Falls)",
+      maxElevation: "1,200 feet",
+      notes: "Trail follows Eagle Creek with waterfalls and lush vegetation. Be cautious of narrow paths.",
+    },
+  },
+  {
+    name: "Mount Rainier Wonderland Trailhead (Washington)",
+    position: Cesium.Cartesian3.fromDegrees(-121.7269, 46.8523, 1685),
+    details: {
+      difficulty: "10/10",
+      distance: "93 miles (loop)",
+      maxElevation: "6,700 feet",
+      notes: "Multi-day trek circumnavigating Mount Rainier. Requires permits and planning.",
+    },
+  },
+  {
+    name: "Hurricane Ridge Trailhead (Olympic National Park, Washington)",
+    position: Cesium.Cartesian3.fromDegrees(-123.4972, 47.9691, 1630),
+    details: {
+      difficulty: "5/10",
+      distance: "3.2 miles (round trip to Hurricane Hill)",
+      maxElevation: "5,757 feet",
+      notes: "Family-friendly trail with panoramic views of the Olympic Mountains.",
+    },
+  },
+  {
+    name: "Cascade Pass Trailhead (North Cascades, Washington)",
+    position: Cesium.Cartesian3.fromDegrees(-121.0523, 48.4980, 1230),
+    details: {
+      difficulty: "7/10",
+      distance: "7.4 miles (round trip)",
+      maxElevation: "5,392 feet",
+      notes: "Iconic trail with stunning alpine views. Great for wildlife spotting.",
+    },
+  },
+  {
+    name: "Tamolitch Blue Pool Trailhead (Oregon)",
+    position: Cesium.Cartesian3.fromDegrees(-122.0507, 44.2965, 975),
+    details: {
+      difficulty: "5/10",
+      distance: "4 miles (round trip)",
+      maxElevation: "1,130 feet",
+      notes: "Easy hike to a breathtaking turquoise pool. Best visited in summer or fall.",
+    },
+  },
+  //NorthEast
+  {
+    name: "Mount Washington Trailhead (Tuckerman Ravine, New Hampshire)",
+    position: Cesium.Cartesian3.fromDegrees(-71.2995, 44.2588, 670),
+    details: {
+      difficulty: "10/10",
+      distance: "8.4 miles (round trip via Tuckerman Ravine Trail)",
+      maxElevation: "6,288 feet",
+      notes: "New England's tallest peak. Be prepared for rapidly changing weather.",
+    },
+  },
+  {
+    name: "Breakneck Ridge Trailhead (New York)",
+    position: Cesium.Cartesian3.fromDegrees(-73.9455, 41.4454, 80),
+    details: {
+      difficulty: "9/10",
+      distance: "4.5 miles (loop)",
+      maxElevation: "1,250 feet",
+      notes: "Challenging rock scramble with stunning views of the Hudson River.",
+    },
+  },
+  {
+    name: "Mount Katahdin Trailhead (Maine)",
+    position: Cesium.Cartesian3.fromDegrees(-68.9217, 45.9044, 375),
+    details: {
+      difficulty: "10/10",
+      distance: "9-11 miles (round trip depending on route)",
+      maxElevation: "5,267 feet",
+      notes: "Northern terminus of the Appalachian Trail. Permit required for day hikes.",
+    },
+  },
+  {
+    name: "Franconia Ridge Loop Trailhead (New Hampshire)",
+    position: Cesium.Cartesian3.fromDegrees(-71.6888, 44.1486, 580),
+    details: {
+      difficulty: "9/10",
+      distance: "8.9 miles (loop)",
+      maxElevation: "5,249 feet",
+      notes: "Breathtaking ridge walk connecting Mount Lafayette and Mount Lincoln.",
+    },
+  },
+  {
+    name: "Mount Marcy Trailhead (New York)",
+    position: Cesium.Cartesian3.fromDegrees(-73.9353, 44.2187, 670),
+    details: {
+      difficulty: "9/10",
+      distance: "14.8 miles (round trip via Van Hoevenberg Trail)",
+      maxElevation: "5,344 feet",
+      notes: "Highest peak in New York. Offers sweeping views of the Adirondacks.",
+    },
+  },
+  {
+    name: "Old Rag Mountain Trailhead (Virginia)",
+    position: Cesium.Cartesian3.fromDegrees(-78.3098, 38.5703, 390),
+    details: {
+      difficulty: "9/10",
+      distance: "9 miles (loop)",
+      maxElevation: "3,284 feet",
+      notes: "Challenging rock scramble with panoramic views. Requires a ticketed day-use pass.",
+    },
+  },
+  {
+    name: "Camel's Hump Trailhead (Vermont)",
+    position: Cesium.Cartesian3.fromDegrees(-72.8922, 44.3198, 620),
+    details: {
+      difficulty: "7/10",
+      distance: "6 miles (round trip via Burrows Trail)",
+      maxElevation: "4,081 feet",
+      notes: "Iconic Vermont hike with spectacular views of the Green Mountains.",
+    },
+  },
+  {
+    name: "Cadillac Mountain Trailhead (Maine)",
+    position: Cesium.Cartesian3.fromDegrees(-68.2233, 44.3517, 390),
+    details: {
+      difficulty: "6/10",
+      distance: "4.4 miles (round trip via Cadillac South Ridge Trail)",
+      maxElevation: "1,530 feet",
+      notes: "First place to see the sunrise in the U.S. during certain months. Stunning ocean views.",
+    },
+  },
+  // Southern Appalachian
+  {
+    name: "Clingmans Dome Trailhead (Tennessee/North Carolina)",
+    position: Cesium.Cartesian3.fromDegrees(-83.4987, 35.6533, 2065),
+    details: {
+      difficulty: "4/10",
+      distance: "1 mile (round trip)",
+      maxElevation: "6,643 feet",
+      notes: "Highest point in the Smoky Mountains. Short, steep hike to a stunning observation tower.",
+    },
+  },
+  {
+    name: "Mount Mitchell Trailhead (North Carolina)",
+    position: Cesium.Cartesian3.fromDegrees(-82.2689, 35.7517, 1890),
+    details: {
+      difficulty: "9/10",
+      distance: "12 miles (round trip via Mount Mitchell Trail)",
+      maxElevation: "6,684 feet",
+      notes: "Highest peak east of the Mississippi River. Challenging hike with rewarding views.",
+    },
+  },
+  {
+    name: "Roan Mountain Trailhead (Tennessee/North Carolina)",
+    position: Cesium.Cartesian3.fromDegrees(-82.1058, 36.1065, 1755),
+    details: {
+      difficulty: "7/10",
+      distance: "4.5 miles (round trip to Grassy Ridge Bald)",
+      maxElevation: "5,512 feet",
+      notes: "Famous for its rhododendron blooms in summer and panoramic views year-round.",
+    },
+  },
+  {
+    name: "Max Patch Trailhead (North Carolina/Tennessee)",
+    position: Cesium.Cartesian3.fromDegrees(-82.9514, 35.7973, 1480),
+    details: {
+      difficulty: "5/10",
+      distance: "1.5 miles (loop)",
+      maxElevation: "4,629 feet",
+      notes: "Iconic Appalachian bald with 360-degree views of the Smokies and Blue Ridge Mountains.",
+    },
+  },
+  {
+    name: "McAfee Knob Trailhead (Virginia)",
+    position: Cesium.Cartesian3.fromDegrees(-80.0896, 37.3806, 595),
+    details: {
+      difficulty: "8/10",
+      distance: "8 miles (round trip)",
+      maxElevation: "3,197 feet",
+      notes: "One of the most photographed spots on the Appalachian Trail. Stunning cliffside views.",
+    },
+  },
+  {
+    name: "Blood Mountain Trailhead (Georgia)",
+    position: Cesium.Cartesian3.fromDegrees(-83.9221, 34.7368, 900),
+    details: {
+      difficulty: "7/10",
+      distance: "4.5 miles (round trip via Byron Reece Trail)",
+      maxElevation: "4,458 feet",
+      notes: "Highest peak on the Appalachian Trail in Georgia. Amazing summit views.",
+    },
+  },
+  {
+    name: "Table Rock Trailhead (South Carolina)",
+    position: Cesium.Cartesian3.fromDegrees(-82.6989, 35.0046, 385),
+    details: {
+      difficulty: "8/10",
+      distance: "7 miles (round trip)",
+      maxElevation: "3,124 feet",
+      notes: "Steep climb to stunning views of the Blue Ridge Escarpment.",
+    },
+  },
+  {
+    name: "Old Rag Mountain Trailhead (Virginia)",
+    position: Cesium.Cartesian3.fromDegrees(-78.3098, 38.5703, 380),
+    details: {
+      difficulty: "9/10",
+      distance: "9 miles (loop)",
+      maxElevation: "3,284 feet",
+      notes: "Challenging rock scramble with panoramic views. Requires a ticketed day-use pass.",
+    },
+  },
+  // Alaska
+  {
+    name: "Flattop Mountain Trailhead (Anchorage)",
+    position: Cesium.Cartesian3.fromDegrees(-149.6905, 61.0943, 710),
+    details: {
+      difficulty: "6/10",
+      distance: "3.3 miles (round trip)",
+      maxElevation: "3,510 feet",
+      notes: "One of Anchorage's most popular hikes. Offers panoramic views of the city and surrounding mountains.",
+    },
+  },
+  {
+    name: "Mount Healy Overlook Trailhead (Denali National Park)",
+    position: Cesium.Cartesian3.fromDegrees(-149.0089, 63.7382, 510),
+    details: {
+      difficulty: "7/10",
+      distance: "4.5 miles (round trip)",
+      maxElevation: "3,000 feet",
+      notes: "A steep climb with stunning views of the Denali area. Watch for wildlife.",
+    },
+  },
+  {
+    name: "Harding Icefield Trailhead (Kenai Fjords National Park)",
+    position: Cesium.Cartesian3.fromDegrees(-149.6651, 60.1837, 190),
+    details: {
+      difficulty: "9/10",
+      distance: "8.2 miles (round trip)",
+      maxElevation: "3,812 feet",
+      notes: "Challenging hike with breathtaking views of the massive Harding Icefield. Prepare for changing weather.",
+    },
+  },
+  {
+    name: "Eagle River Nature Center Trailhead (Crow Pass Trail, Chugach State Park)",
+    position: Cesium.Cartesian3.fromDegrees(-149.2433, 61.2639, 260),
+    details: {
+      difficulty: "8/10",
+      distance: "23 miles (point-to-point)",
+      maxElevation: "3,500 feet",
+      notes: "A stunning backcountry route with glaciers, waterfalls, and wildlife. Suitable for experienced hikers.",
+    },
+  },
+  {
+    name: "Lost Lake Trailhead (Kenai Peninsula)",
+    position: Cesium.Cartesian3.fromDegrees(-149.4331, 60.3253, 530),
+    details: {
+      difficulty: "7/10",
+      distance: "14 miles (round trip)",
+      maxElevation: "2,400 feet",
+      notes: "Beautiful alpine hike with lush meadows and stunning lake views. Best in summer.",
+    },
+  },
+  {
+    name: "Angel Rocks Trailhead (Chena River State Recreation Area, Fairbanks)",
+    position: Cesium.Cartesian3.fromDegrees(-146.4646, 64.8744, 720),
+    details: {
+      difficulty: "6/10",
+      distance: "3.5 miles (loop)",
+      maxElevation: "1,760 feet",
+      notes: "Scenic rock formations and sweeping views of the Chena River Valley.",
+    },
+  },
+  {
+    name: "Matanuska Glacier Trailhead (Glacier Access Trail)",
+    position: Cesium.Cartesian3.fromDegrees(-147.7451, 61.6828, 350),
+    details: {
+      difficulty: "5/10",
+      distance: "2 miles (round trip)",
+      maxElevation: "850 feet",
+      notes: "Unique opportunity to hike on a glacier. Guided tours recommended for safety.",
+    },
+  },
+  {
+    name: "Mount Marathon Trailhead (Seward)",
+    position: Cesium.Cartesian3.fromDegrees(-149.4322, 60.1055, 70),
+    details: {
+      difficulty: "10/10",
+      distance: "3.1 miles (round trip)",
+      maxElevation: "3,022 feet",
+      notes: "Notorious for its steep ascent and annual race. Experienced hikers only.",
+    },
+  },
+  // Eastern Canada
+  {
+    name: "Skyline Trailhead (Cape Breton Highlands National Park, Nova Scotia)",
+    position: Cesium.Cartesian3.fromDegrees(-60.8761, 46.7402, 485),
+    details: {
+      difficulty: "5/10",
+      distance: "4.7 miles (loop)",
+      maxElevation: "1,340 feet",
+      notes: "Famous for its boardwalk and stunning ocean views along the Cabot Trail. Excellent for spotting wildlife like moose.",
+    },
+  },
+  {
+    name: "Fundy Footpath Trailhead (Fundy National Park, New Brunswick)",
+    position: Cesium.Cartesian3.fromDegrees(-64.9452, 45.5984, 190),
+    details: {
+      difficulty: "9/10",
+      distance: "30 miles (point-to-point)",
+      maxElevation: "980 feet",
+      notes: "Challenging multi-day hike with views of the Bay of Fundy, home to the highest tides in the world.",
+    },
+  },
+  {
+    name: "Acropole des Draveurs Trailhead (Charlevoix, Quebec)",
+    position: Cesium.Cartesian3.fromDegrees(-70.7311, 47.6040, 175),
+    details: {
+      difficulty: "8/10",
+      distance: "5.4 miles (round trip)",
+      maxElevation: "3,442 feet",
+      notes: "Steep trail with rewarding panoramic views of the Hautes-Gorges-de-la-Rivière-Malbaie National Park.",
+    },
+  },
+  {
+    name: "Cape Split Trailhead (Nova Scotia)",
+    position: Cesium.Cartesian3.fromDegrees(-64.4182, 45.3173, 290),
+    details: {
+      difficulty: "6/10",
+      distance: "7.8 miles (round trip)",
+      maxElevation: "650 feet",
+      notes: "Relatively easy hike with spectacular views of the Bay of Fundy from the cliffs.",
+    },
+  },
+  {
+    name: "Mont Tremblant Trailhead (Quebec)",
+    position: Cesium.Cartesian3.fromDegrees(-74.5794, 46.2130, 350),
+    details: {
+      difficulty: "7/10",
+      distance: "7 miles (round trip via Grand Brûlé Trail)",
+      maxElevation: "2,871 feet",
+      notes: "Popular year-round destination. Offers scenic views of the Laurentians.",
+    },
+  },
+  {
+    name: "Gros Morne Mountain Trailhead (Gros Morne National Park, Newfoundland and Labrador)",
+    position: Cesium.Cartesian3.fromDegrees(-57.7439, 49.5234, 180),
+    details: {
+      difficulty: "8/10",
+      distance: "9.5 miles (round trip)",
+      maxElevation: "2,644 feet",
+      notes: "Stunning alpine landscape and panoramic views of Gros Morne National Park. Prepare for unpredictable weather.",
+    },
+  },
+  {
+    name: "Sugarloaf Mountain Trailhead (Campbellton, New Brunswick)",
+    position: Cesium.Cartesian3.fromDegrees(-66.6674, 48.0114, 195),
+    details: {
+      difficulty: "7/10",
+      distance: "2.9 miles (round trip)",
+      maxElevation: "980 feet",
+      notes: "Short, steep hike with breathtaking views of the Restigouche River and surrounding forest.",
+    },
+  },
+  {
+    name: "Les Loups Trailhead (Jacques-Cartier National Park, Quebec)",
+    position: Cesium.Cartesian3.fromDegrees(-71.4571, 47.0367, 280),
+    details: {
+      difficulty: "7/10",
+      distance: "6.5 miles (round trip)",
+      maxElevation: "2,130 feet",
+      notes: "Leads to two incredible viewpoints over the Jacques-Cartier Valley. Popular during the fall.",
+    },
+  },
+  {
+    name: "Plain of Six Glaciers Trailhead (Banff National Park, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-116.2146, 51.4165, 1790),
+    details: {
+      difficulty: "7/10",
+      distance: "8.6 miles (round trip)",
+      maxElevation: "7,200 feet",
+      notes: "Iconic trail starting at Lake Louise with breathtaking views of glaciers and a charming teahouse.",
+    },
+  },
+  {
+    name: "Lake O'Hara Alpine Circuit Trailhead (Yoho National Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-116.3440, 51.3746, 2070),
+    details: {
+      difficulty: "9/10",
+      distance: "7 miles (loop)",
+      maxElevation: "7,874 feet",
+      notes: "Requires shuttle reservations. Offers stunning alpine lakes and rugged mountain scenery.",
+    },
+  },
+  {
+    name: "The Black Tusk Trailhead (Garibaldi Provincial Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-123.0228, 49.9571, 650),
+    details: {
+      difficulty: "9/10",
+      distance: "17 miles (round trip)",
+      maxElevation: "7,608 feet",
+      notes: "A challenging trek to a striking volcanic peak with panoramic views of the Coast Mountains.",
+    },
+  },
+  {
+    name: "West Coast Trailhead (Pacific Rim National Park Reserve, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-125.5947, 48.6606, 70),
+    details: {
+      difficulty: "10/10",
+      distance: "47 miles (point-to-point)",
+      maxElevation: "900 feet",
+      notes: "Multi-day coastal trek with beaches, rainforests, and ladders. Reservations required.",
+    },
+  },
+  {
+    name: "Sulphur Skyline Trailhead (Jasper National Park, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-117.7940, 52.8881, 1190),
+    details: {
+      difficulty: "7/10",
+      distance: "5 miles (round trip)",
+      maxElevation: "6,780 feet",
+      notes: "Steep trail leading to panoramic views. Nearby hot springs make for a great post-hike relaxation.",
+    },
+  },
+  {
+    name: "Ha Ling Peak Trailhead (Canmore, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-115.3681, 51.0862, 1720),
+    details: {
+      difficulty: "7/10",
+      distance: "5.6 miles (round trip)",
+      maxElevation: "8,035 feet",
+      notes: "Short but steep hike with rewarding views of Canmore and the Bow Valley.",
+    },
+  },
+  {
+    name: "Iceline Trailhead (Yoho National Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-116.4839, 51.4208, 1670),
+    details: {
+      difficulty: "8/10",
+      distance: "13 miles (loop)",
+      maxElevation: "7,300 feet",
+      notes: "Spectacular glacial views along a high ridge. Best hiked during summer and fall.",
+    },
+  },
+  {
+    name: "Berg Lake Trailhead (Mount Robson Provincial Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-119.2339, 53.0497, 890),
+    details: {
+      difficulty: "9/10",
+      distance: "26 miles (round trip)",
+      maxElevation: "5,400 feet",
+      notes: "One of the most iconic hikes in Canada. Features turquoise lakes, glaciers, and towering peaks.",
+    },
+  },
+  // Western Canada
+  {
+    name: "Plain of Six Glaciers Trailhead (Banff National Park, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-116.2146, 51.4165, 1790),
+    details: {
+      difficulty: "7/10",
+      distance: "8.6 miles (round trip)",
+      maxElevation: "7,200 feet",
+      notes: "Iconic trail starting at Lake Louise with breathtaking views of glaciers and a charming teahouse.",
+    },
+  },
+  {
+    name: "Lake O'Hara Alpine Circuit Trailhead (Yoho National Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-116.3440, 51.3746, 2070),
+    details: {
+      difficulty: "9/10",
+      distance: "7 miles (loop)",
+      maxElevation: "7,874 feet",
+      notes: "Requires shuttle reservations. Offers stunning alpine lakes and rugged mountain scenery.",
+    },
+  },
+  {
+    name: "The Black Tusk Trailhead (Garibaldi Provincial Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-123.0228, 49.9571, 650),
+    details: {
+      difficulty: "9/10",
+      distance: "17 miles (round trip)",
+      maxElevation: "7,608 feet",
+      notes: "A challenging trek to a striking volcanic peak with panoramic views of the Coast Mountains.",
+    },
+  },
+  {
+    name: "West Coast Trailhead (Pacific Rim National Park Reserve, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-125.5947, 48.6606, 70),
+    details: {
+      difficulty: "10/10",
+      distance: "47 miles (point-to-point)",
+      maxElevation: "900 feet",
+      notes: "Multi-day coastal trek with beaches, rainforests, and ladders. Reservations required.",
+    },
+  },
+  {
+    name: "Sulphur Skyline Trailhead (Jasper National Park, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-117.7940, 52.8881, 1190),
+    details: {
+      difficulty: "7/10",
+      distance: "5 miles (round trip)",
+      maxElevation: "6,780 feet",
+      notes: "Steep trail leading to panoramic views. Nearby hot springs make for a great post-hike relaxation.",
+    },
+  },
+  {
+    name: "Ha Ling Peak Trailhead (Canmore, Alberta)",
+    position: Cesium.Cartesian3.fromDegrees(-115.3681, 51.0862, 1720),
+    details: {
+      difficulty: "7/10",
+      distance: "5.6 miles (round trip)",
+      maxElevation: "8,035 feet",
+      notes: "Short but steep hike with rewarding views of Canmore and the Bow Valley.",
+    },
+  },
+  {
+    name: "Iceline Trailhead (Yoho National Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-116.4839, 51.4208, 1660),
+    details: {
+      difficulty: "8/10",
+      distance: "13 miles (loop)",
+      maxElevation: "7,300 feet",
+      notes: "Spectacular glacial views along a high ridge. Best hiked during summer and fall.",
+    },
+  },
+  {
+    name: "Berg Lake Trailhead (Mount Robson Provincial Park, British Columbia)",
+    position: Cesium.Cartesian3.fromDegrees(-119.2339, 53.0497, 890),
+    details: {
+      difficulty: "9/10",
+      distance: "26 miles (round trip)",
+      maxElevation: "5,400 feet",
+      notes: "One of the most iconic hikes in Canada. Features turquoise lakes, glaciers, and towering peaks.",
+    },
+  },
+  // Europe
+  {
+    name: "Trolltunga Trailhead (Norway)",
+    position: Cesium.Cartesian3.fromDegrees(6.7347, 60.1222, 483),
+    details: {
+      difficulty: "9/10",
+      distance: "17 miles (round trip)",
+      maxElevation: "3,600 feet",
+      notes: "Iconic hike to a stunning rock outcropping overlooking Lake Ringedalsvatnet. Requires good physical fitness.",
+    },
+  },
+  {
+    name: "Cinque Terre Trailhead (Italy)",
+    position: Cesium.Cartesian3.fromDegrees(9.7170, 44.1466, 90),
+    details: {
+      difficulty: "6/10",
+      distance: "7.5 miles (point-to-point via Blue Trail)",
+      maxElevation: "1,500 feet",
+      notes: "Coastal trail connecting picturesque villages. Best explored in spring or fall to avoid crowds.",
+    },
+  },
+  {
+    name: "Tour du Mont Blanc Trailhead (France, Italy, Switzerland)",
+    position: Cesium.Cartesian3.fromDegrees(6.8663, 45.9237, 1060),
+    details: {
+      difficulty: "10/10",
+      distance: "105 miles (loop, multi-day)",
+      maxElevation: "8,323 feet",
+      notes: "One of Europe’s most famous long-distance hikes with breathtaking alpine scenery. Requires permits for some sections.",
+    },
+  },
+  {
+    name: "Lauterbrunnen Valley Trailhead (Switzerland)",
+    position: Cesium.Cartesian3.fromDegrees(7.9111, 46.5982, 850),
+    details: {
+      difficulty: "5/10",
+      distance: "10 miles (round trip to Mürren and back)",
+      maxElevation: "5,413 feet",
+      notes: "Known as the 'Valley of 72 Waterfalls,' this hike offers stunning views of alpine waterfalls and cliffs.",
+    },
+  },
+  {
+    name: "Ben Nevis Trailhead (Scotland, UK)",
+    position: Cesium.Cartesian3.fromDegrees(-5.0036, 56.7968, 80),
+    details: {
+      difficulty: "8/10",
+      distance: "10.5 miles (round trip via Mountain Track)",
+      maxElevation: "4,413 feet",
+      notes: "The highest peak in the UK. Challenging climb with often unpredictable weather.",
+    },
+  },
+  {
+    name: "Camino de Santiago Trailhead (Spain, The French Way)",
+    position: Cesium.Cartesian3.fromDegrees(-7.8742, 42.8806, 290),
+    details: {
+      difficulty: "7/10",
+      distance: "500 miles (multi-day)",
+      maxElevation: "4,920 feet",
+      notes: "Famous pilgrimage route ending in Santiago de Compostela. Can be done in sections.",
+    },
+  },
+  {
+    name: "Laugavegur Trailhead (Iceland)",
+    position: Cesium.Cartesian3.fromDegrees(-19.0912, 63.9905, 490),
+    details: {
+      difficulty: "8/10",
+      distance: "34 miles (point-to-point)",
+      maxElevation: "3,600 feet",
+      notes: "Spectacular multi-day trek through Iceland's volcanic landscapes and hot springs. Best in summer.",
+    },
+  },
+  {
+    name: "Königssee Trailhead (Berchtesgaden National Park, Germany)",
+    position: Cesium.Cartesian3.fromDegrees(12.9727, 47.5916, 650),
+    details: {
+      difficulty: "6/10",
+      distance: "8 miles (round trip to Röthbach Waterfall)",
+      maxElevation: "1,200 feet",
+      notes: "Picturesque lakeside hike with opportunities to explore waterfalls and alpine meadows.",
+    },
+  },
+  // Indo
+  {
+    name: "Mount Rinjani Trailhead (Lombok)",
+    position: Cesium.Cartesian3.fromDegrees(116.4570, -8.4112, 651),
+    details: {
+      difficulty: "10/10",
+      distance: "16 miles (round trip)",
+      maxElevation: "12,224 feet",
+      notes: "Challenging multi-day trek to Indonesia’s second-highest volcano. Stunning crater lake views. Requires a guide.",
+    },
+  },
+  {
+    name: "Kawah Ijen Trailhead (East Java)",
+    position: Cesium.Cartesian3.fromDegrees(114.2423, -8.0581, 1890),
+    details: {
+      difficulty: "7/10",
+      distance: "3 miles (round trip)",
+      maxElevation: "9,183 feet",
+      notes: "Famous for its blue flames and sulfur mining. Best hiked at night for unique views.",
+    },
+  },
+  {
+    name: "Mount Bromo Trailhead (East Java)",
+    position: Cesium.Cartesian3.fromDegrees(112.9500, -7.9425, 2380),
+    details: {
+      difficulty: "5/10",
+      distance: "2 miles (round trip)",
+      maxElevation: "7,847 feet",
+      notes: "Iconic volcano hike with sunrise views over the Tengger Caldera. Moderate climb.",
+    },
+  },
+  {
+    name: "Mount Merbabu Trailhead (Central Java)",
+    position: Cesium.Cartesian3.fromDegrees(110.4466, -7.4547, 1550),
+    details: {
+      difficulty: "8/10",
+      distance: "7.5 miles (round trip via Selo Route)",
+      maxElevation: "10,318 feet",
+      notes: "Known for its lush greenery and panoramic views of neighboring volcanoes. Requires decent fitness.",
+    },
+  },
+  {
+    name: "Mount Agung Trailhead (Bali)",
+    position: Cesium.Cartesian3.fromDegrees(115.5091, -8.3742, 1220),
+    details: {
+      difficulty: "10/10",
+      distance: "6 miles (round trip via Pura Besakih Route)",
+      maxElevation: "9,944 feet",
+      notes: "Bali's highest volcano. A spiritual trek with sunrise views over the island. Requires a guide.",
+    },
+  },
+  {
+    name: "Mount Batur Trailhead (Bali)",
+    position: Cesium.Cartesian3.fromDegrees(115.3666, -8.2399, 1150),
+    details: {
+      difficulty: "6/10",
+      distance: "4 miles (round trip)",
+      maxElevation: "5,633 feet",
+      notes: "Popular sunrise hike offering views of Mount Agung and Lake Batur. Suitable for most fitness levels.",
+    },
+  },
+  {
+    name: "Mount Semeru Trailhead (East Java)",
+    position: Cesium.Cartesian3.fromDegrees(112.9206, -8.1012, 1350),
+    details: {
+      difficulty: "10/10",
+      distance: "22 miles (round trip)",
+      maxElevation: "12,060 feet",
+      notes: "Indonesia’s highest peak. Multi-day trek through volcanic terrain. Requires a guide and permits.",
+    },
+  },
+  {
+    name: "Mount Kelimutu Trailhead (Flores Island)",
+    position: Cesium.Cartesian3.fromDegrees(121.8125, -8.7713, 1740),
+    details: {
+      difficulty: "5/10",
+      distance: "2 miles (round trip)",
+      maxElevation: "5,544 feet",
+      notes: "Short hike to the famous tri-colored volcanic lakes. Best visited at sunrise.",
+    },
+  },
+  // South Pacific
+  {
+    name: "Mount Otemanu Trailhead (Bora Bora, French Polynesia)",
+    position: Cesium.Cartesian3.fromDegrees(-151.7498, -16.5004, 80),
+    details: {
+      difficulty: "9/10",
+      distance: "4 miles (round trip)",
+      maxElevation: "2,385 feet",
+      notes: "Challenging climb with dense jungle terrain. Offers breathtaking panoramic views of the lagoon and surrounding islands.",
+    },
+  },
+  {
+    name: "Mount Yasur Trailhead (Tanna Island, Vanuatu)",
+    position: Cesium.Cartesian3.fromDegrees(169.4472, -19.5166, 391),
+    details: {
+      difficulty: "6/10",
+      distance: "1.5 miles (round trip)",
+      maxElevation: "1,184 feet",
+      notes: "Active volcano with accessible viewpoints. Best visited at night for glowing lava displays.",
+    },
+  },
+  {
+    name: "Cross Island Hike Trailhead (Rarotonga, Cook Islands)",
+    position: Cesium.Cartesian3.fromDegrees(-159.7674, -21.2324, 90),
+    details: {
+      difficulty: "7/10",
+      distance: "4 miles (point-to-point)",
+      maxElevation: "1,555 feet",
+      notes: "Jungle trek that crosses the island with scenic views and a stop at Te Rua Manga (The Needle).",
+    },
+  },
+  {
+    name: "Talava Arches Trailhead (Niue)",
+    position: Cesium.Cartesian3.fromDegrees(-169.8672, -19.0491, 90),
+    details: {
+      difficulty: "5/10",
+      distance: "1.8 miles (round trip)",
+      maxElevation: "150 feet",
+      notes: "Coastal hike to dramatic natural rock arches and caves. Best at low tide for access to tidal pools.",
+    },
+  },
+  {
+    name: "Te Rua Manga Trailhead (Rarotonga, Cook Islands)",
+    position: Cesium.Cartesian3.fromDegrees(-159.7555, -21.2279, 170),
+    details: {
+      difficulty: "8/10",
+      distance: "3 miles (round trip)",
+      maxElevation: "1,555 feet",
+      notes: "Challenging ascent to 'The Needle,' a dramatic rock pinnacle with views of the island.",
+    },
+  },
+  {
+    name: "Mount Tomanivi Trailhead (Viti Levu, Fiji)",
+    position: Cesium.Cartesian3.fromDegrees(178.0193, -17.6091, 890),
+    details: {
+      difficulty: "8/10",
+      distance: "5 miles (round trip)",
+      maxElevation: "4,344 feet",
+      notes: "Fiji’s highest peak. Trek through dense rainforest with views of the Pacific Ocean on clear days.",
+    },
+  },
+  {
+    name: "Sopoaga Falls Trailhead (Upolu, Samoa)",
+    position: Cesium.Cartesian3.fromDegrees(-171.6661, -13.9855, 120),
+    details: {
+      difficulty: "3/10",
+      distance: "1 mile (round trip)",
+      maxElevation: "250 feet",
+      notes: "Short and easy hike to a stunning waterfall surrounded by lush tropical gardens.",
+    },
+  },
+  {
+    name: "Mount Talau Trailhead (Vava'u, Tonga)",
+    position: Cesium.Cartesian3.fromDegrees(-174.0040, -18.6461, 155),
+    details: {
+      difficulty: "5/10",
+      distance: "1 mile (round trip)",
+      maxElevation: "670 feet",
+      notes: "Short hike offering views of the harbor and surrounding islands. Great for bird watching.",
+    },
+  },
+    ];
+
+    // Add trailheads
+    trailheads.forEach((trailhead) => {
+      const entity = viewer.entities.add({
+        name: trailhead.name,
+        position: trailhead.position,
+        point: {
+          pixelSize: 10,
+          color: Cesium.Color.FORESTGREEN,
+          outlineColor: Cesium.Color.MINTCREAM,
+          outlineWidth: 2,
+        },
+        label: {
+      text: trailhead.name,
+      font: 'bold 16pt Baloo', // Larger and modern font
+      fillColor: Cesium.Color.MINTCREAM, // Bright label text color for visibility
+      outlineColor: Cesium.Color.FORESTGREEN, // High contrast for better readability
+      outlineWidth: .5,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -15), // Adjusted offset to align with the larger icon
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 100000), // Visible only within 100 km
+    },
+      });
+
+     // Add description box logic with an image
+entity.description = `
+  <div style="
+      font-family: Arial, sans-serif; 
+      font-size: 16px; 
+      color: #ffffff; 
+      padding: 15px; 
+      line-height: 1.6;
+      background-color: #333333; 
+      border-radius: 8px;
+    ">
+    <div style="margin-bottom: 10px; font-size: 18px; font-weight: bold; color: #f0f0f0;">
+      ${trailhead.name}
+    </div>
+    <div style="text-align: center; margin-bottom: 15px;">
+      <img 
+        src="${trailhead.details.image}" 
+        alt="${trailhead.name}" 
+        style="max-width: 100%; border-radius: 8px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);"
+      />
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong>Difficulty:</strong> 
+      <span style="color: ${trailhead.details.difficulty.includes('10') ? 'red' : 'limegreen'};">
+        ${trailhead.details.difficulty}
+      </span>
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong>Distance:</strong> ${trailhead.details.distance}
+    </div>
+    <div style="margin-bottom: 8px;">
+      <strong>Max Elevation:</strong> ${trailhead.details.maxElevation}
+    </div>
+    <div style="
+        margin-top: 15px; 
+        background-color: #ffffff; 
+        padding: 10px; 
+        border-radius: 5px; 
+        color: #333;
+        font-size: 14px;
+      ">
+      <strong>Notes:</strong> ${trailhead.details.notes}
+    </div>
+  </div>
+`;
+
+
+
+    });
+  </script>
 </body>
 </html>
