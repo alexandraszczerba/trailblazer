@@ -1,169 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <title>Create Your Trail</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-
-        #cesiumContainer {
-            width: 100%;
-            height: 100%;
-        }
-
-        #infoBox {
-            position: absolute;
-            top: 60px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
-            font-size: 14px;
-            min-width: 300px; /* Increased width to accommodate dropdown */
-        }
-
-        /* Container for overall trail messages */
-        #messageBox {
-            margin-bottom: 15px;
-        }
-
-        /* Container for the dropdown */
-        #segmentDropdownContainer {
-            margin-top: 10px;
-        }
-
-        /* Styling for buttons */
-        #homeBtn {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #28a745;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            border-radius: 5px;
-        }
-
-        #undoBtn {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #ebd234; /* green color */
-            color: white;
-            font-size: 14px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-    
+    <meta charset="utf-8">
+    <!-- Include the CesiumJS JavaScript and CSS files -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <title>Create Your Trail</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
         }
 
-        #resetBtn {
-            position: absolute;
-            top: 110px;
-            left: 10px;
-            z-index: 1000;
-            padding: 10px 30px;
-            background-color: #dc3545; /* Red color */
-            color: white;
-            font-size: 14px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
 
-        /* Styling for the dropdown */
-        #segmentDropdown {
-            width: 100%;
-            padding: 5px;
-            font-size: 14px;
-            border-radius: 3px;
-            border: 1px solid #ccc;
-        }
+        #infoBox {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+            font-size: 14px;
+            min-width: 300px; /* Increased width to accommodate dropdown */
+        }
 
-        /* Optional: Style the option when no segments are available */
-        #segmentDropdown:disabled {
-            background-color: #f5f5f5;
-            color: #999;
-        }
+        /* Container for overall trail messages */
+        #messageBox {
+            margin-bottom: 15px;
+        }
 
-        /* Container for segment-specific information */
-        #segmentInfoBox {
-            margin-top: 15px;
-        }
-    </style>
+        /* Container for the dropdown */
+        #segmentDropdownContainer {
+            margin-top: 10px;
+        }
+
+        /* Styling for buttons */
+        #homeBtn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+
+        #undoBtn {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #ffc107; /* Yellow color */
+            color: black;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #resetBtn {
+            position: absolute;
+            top: 110px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #dc3545; /* Red color */
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Styling for the dropdown */
+        #segmentDropdown {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        /* Optional: Style the option when no segments are available */
+        #segmentDropdown:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
+        /* Container for segment-specific information */
+        #segmentInfoBox {
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Link to go back to the homepage -->
-    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+    <!-- Link to go back to the homepage -->
+    <a id="homeBtn" href="homepage.html">Go to Home Page</a>
 
-    <!-- Cesium container -->
-    <div id="cesiumContainer"></div>
+    <!-- Cesium container -->
+    <div id="cesiumContainer"></div>
 
-    <!-- Info box -->
-    <div id="infoBox">
-        <!-- Overall trail messages -->
-        <div id="messageBox">Click on the map to add points.</div>
+    <!-- Info box -->
+    <div id="infoBox">
+        <!-- Overall trail messages -->
+        <div id="messageBox">Click on the map to add points.</div>
 
-        <!-- Dropdown for trail segments -->
-        <div id="segmentDropdownContainer">
-            <label for="segmentDropdown"><strong>Select Trail Segment:</strong></label><br>
-            <select id="segmentDropdown" disabled>
-                <option value="" disabled selected>No segments available</option>
-            </select>
-        </div>
+        <!-- Dropdown for trail segments -->
+        <div id="segmentDropdownContainer">
+            <label for="segmentDropdown"><strong>Select Trail Segment:</strong></label><br>
+            <select id="segmentDropdown" disabled>
+                <option value="" disabled selected>No segments available</option>
+            </select>
+        </div>
 
-        <!-- Segment-specific information -->
-        <div id="segmentInfoBox"></div>
-    </div>
+        <!-- Segment-specific information -->
+        <div id="segmentInfoBox"></div>
+    </div>
 
-    <!-- Undo and Reset buttons -->
-    <button id="undoBtn">Undo</button>
-    <button id="resetBtn">Reset</button>
-    <!-- Button to Publish Trail -->
+    <!-- Undo and Reset buttons -->
+    <button id="undoBtn">Undo</button>
+    <button id="resetBtn">Reset</button>
 
-    <!-- JavaScript for creating a trail -->
-    <script type="module">
-        import { initialize3DMap } from './maketrail.js';
+    <!-- JavaScript for creating a trail -->
+    <script type="module">
+        import { initialize3DMap } from './maketrail.js';
 
-        // Set your Cesium Ion access token here (ensure it's valid)
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        // Set your Cesium Ion access token here (ensure it's valid)
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(),
-            sceneMode: Cesium.SceneMode.SCENE3D, // Enforce 3D mode
-            animation: false, // Disable animation controls
-            timeline: false,  // Disable timeline
-            fullscreenButton: false,
-            baseLayerPicker: false
-        });
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain(),
+            sceneMode: Cesium.SceneMode.SCENE3D, // Enforce 3D mode
+            animation: false, // Disable animation controls
+            timeline: false,  // Disable timeline
+            fullscreenButton: false,
+            baseLayerPicker: false
+        });
 
-        console.log(viewer);
+        console.log(viewer);
 
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
-            orientation: {
-                heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-15.0),
-                roll: 0.0
-            }
-        });
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-15.0),
+                roll: 0.0
+            }
+        });
 
-        // Initialize the 3D Map with trail creation functionality
-        initialize3DMap(viewer);
-    </script>
+        // Initialize the 3D Map with trail creation functionality
+        initialize3DMap(viewer);
+    </script>
 </body>
 </html>
