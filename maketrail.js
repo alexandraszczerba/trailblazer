@@ -44,71 +44,78 @@ export function initialize3DMap(viewer) {
     }
 
     // Initialize trail creation
-    function createTrail() {
-        const activeTrailPoints = [];
-        const pointEntities = [];
+function createTrail() {
+    const activeTrailPoints = [];
+    const pointEntities = [];
+    let trailPolyline = null;
 
-        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
-        handler.setInputAction(async function (click) {
-            const cartesian = viewer.scene.pickPosition(click.position);
+    handler.setInputAction(async function (click) {
+        const cartesian = viewer.scene.pickPosition(click.position);
 
-            if (Cesium.defined(cartesian)) {
-                const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const terrainProvider = viewer.scene.globe.terrainProvider;
+        if (Cesium.defined(cartesian)) {
+            const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            const terrainProvider = viewer.scene.globe.terrainProvider;
 
-                if (!terrainProvider.ready) {
-                    displayError("Terrain data is not yet available.");
-                    return;
-                }
+            if (!terrainProvider.ready) {
+                displayError("Terrain data is not yet available.");
+                return;
+            }
 
-                try {
-                    // Fetch elevation data
-                    const positions = [cartographic];
-                    const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
-                    const elevation = updatedPositions[0].height || 0;
+            try {
+                // Fetch elevation data
+                const positions = [cartographic];
+                const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+                const elevation = updatedPositions[0].height || 0;
 
-                    // Update the elevation info box
-                    updateElevationInfo(elevation);
+                // Update the elevation info box
+                updateElevationInfo(elevation);
 
-                    // Add a point to the trail
-                    activeTrailPoints.push(cartesian);
+                // Add a point to the trail
+                activeTrailPoints.push(cartesian);
 
-                    // Add a point entity
-                    const pointEntity = viewer.entities.add({
-                        position: cartesian,
-                        point: {
-                            pixelSize: 10,
-                            color: Cesium.Color.YELLOW,
-                            outlineColor: Cesium.Color.BLACK,
-                            outlineWidth: 2
-                        }
-                    });
-                    pointEntities.push(pointEntity);
+                // Add a point entity
+                const pointEntity = viewer.entities.add({
+                    position: cartesian,
+                    point: {
+                        pixelSize: 10,
+                        color: Cesium.Color.YELLOW,
+                        outlineColor: Cesium.Color.BLACK,
+                        outlineWidth: 2
+                    }
+                });
+                pointEntities.push(pointEntity);
 
-                    // Update the trail polyline if there are at least two points
-                    if (activeTrailPoints.length > 1) {
-                        viewer.entities.add({
-                            polyline: {
-                                positions: activeTrailPoints,
-                                width: 5,
-                                material: Cesium.Color.YELLOW
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error fetching elevation data:", error);
-                    displayError("Error fetching elevation data. See console for details.");
-                }
-            } else {
-                displayError("Point selection failed. Ensure you are clicking on terrain.");
-            }
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+                // Update the trail polyline if there are at least two points
+                if (activeTrailPoints.length > 1) {
+                    if (trailPolyline) {
+                        // Update existing polyline positions
+                        trailPolyline.polyline.positions = activeTrailPoints;
+                    } else {
+                        // Create a new polyline
+                        trailPolyline = viewer.entities.add({
+                            polyline: {
+                                positions: activeTrailPoints,
+                                width: 5,
+                                material: Cesium.Color.YELLOW
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching elevation data:", error);
+                displayError("Error fetching elevation data. See console for details.");
+            }
+        } else {
+            displayError("Point selection failed. Ensure you are clicking on terrain.");
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        handler.setInputAction(function () {
-            handler.destroy();
-        }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    }
+    handler.setInputAction(function () {
+        handler.destroy();
+    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+}
 
     createTrail();
 
