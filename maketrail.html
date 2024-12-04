@@ -32,7 +32,7 @@
             min-width: 300px; /* Increased width to accommodate dropdown */
         }
 
-        /* Container for trail messages */
+        /* Container for overall trail messages */
         #messageBox {
             margin-bottom: 15px;
         }
@@ -98,6 +98,11 @@
             background-color: #f5f5f5;
             color: #999;
         }
+
+        /* Container for segment-specific information */
+        #segmentInfoBox {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +114,7 @@
 
     <!-- Info box -->
     <div id="infoBox">
-        <!-- Message area -->
+        <!-- Overall trail messages -->
         <div id="messageBox">Click on the map to add points.</div>
 
         <!-- Dropdown for trail segments -->
@@ -119,6 +124,9 @@
                 <option value="" disabled selected>No segments available</option>
             </select>
         </div>
+
+        <!-- Segment-specific information -->
+        <div id="segmentInfoBox"></div>
     </div>
 
     <!-- Undo and Reset buttons -->
@@ -130,7 +138,7 @@
         import { initialize3DMap } from './maketrail.js';
 
         // Set your Cesium Ion access token here (ensure it's valid)
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_ACCESS_TOKEN';
 
         const viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: Cesium.createWorldTerrain(),
