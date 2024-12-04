@@ -1,83 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <!-- Include the CesiumJS JavaScript and CSS files -->
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-  <title>Main Cesium Map</title>
-  <style>
-    #trailInfoBox {
-      display: none;
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background-color: white;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-      width: 300px;
-    }
+  <meta charset="utf-8">
+  <!-- Include the CesiumJS JavaScript and CSS files -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <title>Main Cesium Map</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
 
-    #trailInfoBox h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
-    }
+    #cesiumContainer {
+      width: 100%;
+      height: 100%;
+    }
 
-    #trailPhotos img {
-      width: 80px;
-      height: 80px;
-      border-radius: 5px;
-    }
-    
-    #cesium-infoBox {
-    max-height: none !important; /* Remove max-height restriction */
-    height: auto !important;    /* Allow height to adjust to content */
-  }
+    #trailInfoBox {
+      display: none;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
 
+    #trailInfoBox h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-    /* Improved button styles */
-    #createTrailBtn, #homeBtn {
-      position: absolute;
-      top: 10px;
-      z-index: 1000;
-      padding: 12px 30px;
-      background: linear-gradient(90deg, #28a745, #1e7e34);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      text-align: center;
-      text-decoration: none;
-      font-size: 16px;
-      font-weight: bold;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+    #trailPhotos img {
+      width: 80px;
+      height: 80px;
+      border-radius: 5px;
+    }
+    
+    #cesium-infoBox {
+      max-height: none !important; /* Remove max-height restriction */
+      height: auto !important;    /* Allow height to adjust to content */
+    }
 
-  <button id="createTrailBtn">Create Your Own Trail</button>
+    /* Improved button styles for <a> elements */
+    #createTrailBtn, #homeBtn {
+      position: absolute;
+      top: 10px;
+      z-index: 1000;
+      padding: 12px 30px;
+      background: linear-gradient(90deg, #28a745, #1e7e34);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none; /* Remove underline from links */
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-  <!-- Button to go back to the homepage -->
-  <button id="homeBtn">Go to Home Page</button>
-  </style>
+    #createTrailBtn:hover, #homeBtn:hover {
+      background: linear-gradient(90deg, #1e7e34, #155724);
+      transform: scale(1.05);
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    #createTrailBtn {
+      left: 10px; /* Position the "Create Your Own Trail" button to the left */
+    }
+
+    #homeBtn {
+      right: 10px; /* Position the "Go to Home Page" button to the right */
+    }
+  </style>
 </head>
 <body>
-  <!-- Button to create a trail -->
-  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
+  <!-- Button to create a trail -->
+  <a id="createTrailBtn" href="maketrail.html">Create Your Own Trail</a>
 
-  <!-- Link to go back to the homepage -->
-  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
+  <!-- Button to go back to the homepage -->
+  <a id="homeBtn" href="homepage.html">Go to Home Page</a>
 
-  <!-- Cesium container -->
-  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
+  <!-- Cesium container -->
+  <div id="cesiumContainer" style="width: 100%; height: 100vh;"></div>
 
-  <!-- Trail info box -->
-  <div id="trailInfoBox">
-    <h3 id="trailName"></h3>
-    <p id="trailDetails"></p>
-    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
-  </div>
+  <!-- Trail info box -->
+  <div id="trailInfoBox">
+    <h3 id="trailName"></h3>
+    <p id="trailDetails"></p>
+    <div id="trailPhotos" style="display: flex; gap: 10px;"></div>
+  </div>
+
+  <!-- Optional JavaScript for additional functionalities -->
   <script>
     // Get references to the buttons
     const createTrailBtn = document.getElementById('createTrailBtn');
