@@ -15,84 +15,8 @@ export function initialize3DMap(viewer) {
             pitch: Cesium.Math.toRadians(-15.0),
             roll: 0.0
         },
-        duration: 2 // Duration of the flyTo animation in seconds
+        duration: 2
     });
-
-    // Sample trail data (you can replace this with actual data)
-    const trails = [
-        {
-            name: 'Sample Trail',
-            path: Cesium.Cartesian3.fromDegreesArray([
-                -117.64607, 34.0,
-                -117.645, 34.005,
-                -117.644, 34.010
-            ]),
-            color: Cesium.Color.BLUE
-        }
-    ];
-
-    // Function to add trails to the map
-    function addTrails(trails) {
-        trails.forEach(trail => {
-            viewer.entities.add({
-                name: trail.name,
-                polyline: {
-                    positions: trail.path,
-                    width: 5,
-                    material: trail.color,
-                    clampToGround: true
-                }
-            });
-        });
-    }
-
-    // Function to add waypoints (if you have any)
-    function addWaypoints(trailheads) {
-        trailheads.forEach(trailhead => {
-            viewer.entities.add({
-                name: trailhead.name,
-                position: Cesium.Cartesian3.fromDegrees(trailhead.longitude, trailhead.latitude),
-                point: {
-                    pixelSize: 10,
-                    color: Cesium.Color.RED,
-                    outlineColor: Cesium.Color.BLACK,
-                    outlineWidth: 2
-                },
-                label: {
-                    text: trailhead.name,
-                    font: '14pt sans-serif',
-                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                    outlineWidth: 2,
-                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                    pixelOffset: new Cesium.Cartesian2(0, -10)
-                }
-            });
-        });
-    }
-
-    // Sample trailhead data (you can replace this with actual data)
-    const trailheads = [
-        {
-            name: 'Trailhead 1',
-            longitude: -117.64607,
-            latitude: 34.0
-        }
-    ];
-
-    // Add waypoints and trails to the map
-    addWaypoints(trailheads);
-    addTrails(trails);
-
-    // Hide trail info box when canvas is clicked (assuming you have a 'trailInfoBox' element)
-    viewer.scene.canvas.addEventListener('click', function () {
-        const infoBox = document.getElementById('trailInfoBox');
-        if (infoBox) {
-            infoBox.style.display = 'none';
-        }
-    });
-
-    let activeTrailPoints = [];
-    let pointEntities = []; // To keep track of point entities for undo and reset
 
     // Create an elevation info box
     const elevationInfoBox = document.createElement('div');
@@ -107,59 +31,77 @@ export function initialize3DMap(viewer) {
     elevationInfoBox.style.display = 'none';
     document.body.appendChild(elevationInfoBox);
 
-    // Function to update elevation info box
+    // Function to update the elevation info box
     function updateElevationInfo(elevation) {
         elevationInfoBox.style.display = 'block';
         elevationInfoBox.textContent = `Elevation: ${elevation.toFixed(2)} meters`;
     }
 
-    // Function to allow users to create a custom trail
+    // Function to display an error in the elevation info box
+    function displayError(message) {
+        elevationInfoBox.style.display = 'block';
+        elevationInfoBox.textContent = message;
+    }
+
+    // Initialize trail creation
     function createTrail() {
-        activeTrailPoints = [];
-        pointEntities.forEach(entity => viewer.entities.remove(entity));
-        pointEntities = [];
+        const activeTrailPoints = [];
+        const pointEntities = [];
 
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         handler.setInputAction(async function (click) {
             const cartesian = viewer.scene.pickPosition(click.position);
+
             if (Cesium.defined(cartesian)) {
                 const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
                 const terrainProvider = viewer.scene.globe.terrainProvider;
 
-                // Fetch elevation data
-                const positions = [cartographic];
-                const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
-                const elevation = updatedPositions[0].height || 0;
+                if (!terrainProvider.ready) {
+                    displayError("Terrain data is not yet available.");
+                    return;
+                }
 
-                // Update elevation info box
-                updateElevationInfo(elevation);
+                try {
+                    // Fetch elevation data
+                    const positions = [cartographic];
+                    const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
+                    const elevation = updatedPositions[0].height || 0;
 
-                // Add the point to the trail
-                activeTrailPoints.push(cartesian);
+                    // Update the elevation info box
+                    updateElevationInfo(elevation);
 
-                // Add a point entity
-                const pointEntity = viewer.entities.add({
-                    position: cartesian,
-                    point: {
-                        pixelSize: 10,
-                        color: Cesium.Color.YELLOW,
-                        outlineColor: Cesium.Color.BLACK,
-                        outlineWidth: 2
-                    }
-                });
-                pointEntities.push(pointEntity);
+                    // Add a point to the trail
+                    activeTrailPoints.push(cartesian);
 
-                // Update or create the polyline
-                if (activeTrailPoints.length > 1) {
-                    viewer.entities.add({
-                        polyline: {
-                            positions: activeTrailPoints,
-                            width: 5,
-                            material: Cesium.Color.YELLOW
+                    // Add a point entity
+                    const pointEntity = viewer.entities.add({
+                        position: cartesian,
+                        point: {
+                            pixelSize: 10,
+                            color: Cesium.Color.YELLOW,
+                            outlineColor: Cesium.Color.BLACK,
+                            outlineWidth: 2
                         }
                     });
+                    pointEntities.push(pointEntity);
+
+                    // Update the trail polyline if there are at least two points
+                    if (activeTrailPoints.length > 1) {
+                        viewer.entities.add({
+                            polyline: {
+                                positions: activeTrailPoints,
+                                width: 5,
+                                material: Cesium.Color.YELLOW
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error fetching elevation data:", error);
+                    displayError("Error fetching elevation data. See console for details.");
                 }
+            } else {
+                displayError("Point selection failed. Ensure you are clicking on terrain.");
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
