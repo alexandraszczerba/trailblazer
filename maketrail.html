@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <title>Create Your Trail</title>
     <style>
         body, html {
@@ -29,7 +29,7 @@
             border-radius: 5px;
             z-index: 10;
             font-size: 14px;
-            min-width: 150px;
+            min-width: 200px; /* Increased width to accommodate dropdown */
         }
 
         #homeBtn {
@@ -72,6 +72,17 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        /* Styling for the dropdown container */
+        #dropdownContainer {
+            margin-top: 10px;
+        }
+
+        #segmentDropdown {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -82,7 +93,11 @@
     <div id="cesiumContainer"></div>
 
     <!-- Info box -->
-    <div id="infoBox">Click on the map to add points</div>
+    <div id="infoBox">
+        <p>Click on the map to add points.</p>
+        <!-- Dropdown will be appended here by maketrail.js -->
+    </div>
+
     <button id="undoBtn">Undo</button>
     <button id="resetBtn">Reset</button>
 
