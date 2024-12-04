@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <!-- Include the CesiumJS JavaScript and CSS files -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.97/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <title>Create Your Trail</title>
     <style>
         body, html {
@@ -89,13 +89,14 @@
     <script type="module">
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            sceneMode: Cesium.SceneMode.SCENE3D,
-            animation: false, // Disable animation controls
-            timeline: false,  // Disable timeline
-            fullscreenButton: false,
-            baseLayerPicker: false
-        });
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain(),
+    animation: false,
+    timeline: false,
+    fullscreenButton: false,
+    baseLayerPicker: false,
+});
+
 
         console.log(viewer);
 
