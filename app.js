@@ -1,17 +1,26 @@
 export function initialize3DMap(viewer) {
-    const cesiumViewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain(),
-    timeline: false, // Disable timeline
-    animation: false // Disable animation controls
-    });
+    const Cesium = window.Cesium;
 
-    // Fly to Mt. Baldy
+    // Retrieve location from localStorage
+    const searchLocation = localStorage.getItem('searchLocation') || 'Mt. Baldy';
+
+    // Example coordinates for predefined locations
+    const locationCoordinates = {
+        'Mt. Baldy': [-117.64607, 34.0, 10500],
+        // Add more locations with their [longitude, latitude, height] values
+    };
+
+    const destination = locationCoordinates[searchLocation] || locationCoordinates['Mt. Baldy'];
+
+    // Fly to the selected location
     viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(-117.64607, 34.0, 10500),
+        destination: Cesium.Cartesian3.fromDegrees(...destination),
         orientation: {
             heading: Cesium.Math.toRadians(0.0),
             pitch: Cesium.Math.toRadians(-15.0),
+            roll: 0.0
         },
+        duration: 2
     });
 
     // Trail metadata
