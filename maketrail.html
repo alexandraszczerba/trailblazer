@@ -62,14 +62,13 @@
             left: 10px;
             z-index: 1000;
             padding: 10px 30px;
-            background-color: #ebd234; /* green color */
+            background-color: #ebd234; /* Green color */
             color: white;
             font-size: 14px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-    
-        }
+        }
 
         #resetBtn {
             position: absolute;
@@ -78,6 +77,20 @@
             z-index: 1000;
             padding: 10px 30px;
             background-color: #dc3545; /* Red color */
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #publishBtn {
+            position: absolute;
+            top: 160px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #007bff; /* Blue color */
             color: white;
             font-size: 14px;
             border: none;
@@ -103,6 +116,21 @@
         /* Container for segment-specific information */
         #segmentInfoBox {
             margin-top: 15px;
+        }
+
+        /* Styling for the Add Fixed Point button */
+        #addFixedPointBtn {
+            position: absolute;
+            top: 210px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px 30px;
+            background-color: #17a2b8; /* Teal color */
+            color: white;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -130,17 +158,18 @@
         <div id="segmentInfoBox"></div>
     </div>
 
-    <!-- Undo and Reset buttons -->
+    <!-- Undo, Reset, Publish, and Add Fixed Point buttons -->
     <button id="undoBtn">Undo</button>
     <button id="resetBtn">Reset</button>
-    <!-- Button to Publish Trail -->
+    <button id="publishBtn">Publish Trail</button>
+    <button id="addFixedPointBtn">Add Fixed Point</button>
 
     <!-- JavaScript for creating a trail -->
     <script type="module">
         import { initialize3DMap } from './maketrail.js';
 
         // Set your Cesium Ion access token here (ensure it's valid)
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzY5MGQwNy1kMzc1LTQwODItOTEyYS0zMzA0OWQ0OGE2NjUiLCJpZCI6MjU1NjMwLCJpYXQiOjE3MzE3MjI4MTF9.Kz18W1PwUWiwbUU72gEkqSNmGCcojyE12eDgpBM8U-8';
+        Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_ACCESS_TOKEN';
 
         const viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: Cesium.createWorldTerrain(),
