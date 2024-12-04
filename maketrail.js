@@ -29,14 +29,26 @@ export function initialize3DMap(viewer) {
         }
     }
 
+    // Shared arrays and variables to keep track of trail points, entities, and total distance
+    const activeTrailPoints = [];
+    const pointEntities = [];
+    let trailPolyline = null;
+    let totalDistance = 0; // In meters
+
     /**
      * Adds a labeled marker at the specified Cartesian3 position.
      * @param {Cesium.Cartesian3} position - The position to place the marker.
      * @param {number} index - The index number of the point.
      */
     function addMarker(position, index) {
-        viewer.entities.add({
+        const entity = viewer.entities.add({
             position: position,
+            point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2
+            },
             label: {
                 text: `Point ${index + 1}`,
                 font: '14pt sans-serif',
@@ -45,21 +57,10 @@ export function initialize3DMap(viewer) {
                 verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 pixelOffset: new Cesium.Cartesian2(0, -20),
                 disableDepthTestDistance: Number.POSITIVE_INFINITY // Ensure label is always visible
-            },
-            point: {
-                pixelSize: 10,
-                color: Cesium.Color.RED,
-                outlineColor: Cesium.Color.WHITE,
-                outlineWidth: 2
             }
         });
+        pointEntities.push(entity);
     }
-
-    // Shared arrays and variables to keep track of trail points, entities, and total distance
-    const activeTrailPoints = [];
-    const pointEntities = [];
-    let trailPolyline = null;
-    let totalDistance = 0; // In meters
 
     /**
      * Initializes the trail creation functionality.
@@ -89,28 +90,7 @@ export function initialize3DMap(viewer) {
                     // Add the Cartesian3 position to the active trail points
                     activeTrailPoints.push(cartesian);
 
-                    // Add a point entity (marker) with label
-                    const pointEntity = viewer.entities.add({
-                        position: cartesian,
-                        point: {
-                            pixelSize: 10,
-                            color: Cesium.Color.YELLOW,
-                            outlineColor: Cesium.Color.BLACK,
-                            outlineWidth: 2
-                        },
-                        label: {
-                            text: `Point ${activeTrailPoints.length}`,
-                            font: '14pt sans-serif',
-                            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                            outlineWidth: 2,
-                            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                            pixelOffset: new Cesium.Cartesian2(0, -20),
-                            disableDepthTestDistance: Number.POSITIVE_INFINITY // Ensure label is always visible
-                        }
-                    });
-                    pointEntities.push(pointEntity);
-
-                    // Add a marker with label at the point
+                    // Add a labeled marker for the point
                     addMarker(cartesian, activeTrailPoints.length - 1);
 
                     // Update or create the polyline trail
@@ -191,7 +171,7 @@ export function initialize3DMap(viewer) {
                     viewer.entities.remove(lastEntity);
                 }
 
-                // Remove the last trail point from the polyline
+                // Update polyline positions and total distance
                 if (activeTrailPoints.length > 1) {
                     // Update polyline positions
                     trailPolyline.polyline.positions = activeTrailPoints;
@@ -209,14 +189,18 @@ export function initialize3DMap(viewer) {
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else if (activeTrailPoints.length === 1) {
-                    // Only one point left
-                    trailPolyline.polyline.positions = activeTrailPoints;
+                    // Only one point left, remove polyline and update distance
+                    if (trailPolyline) {
+                        viewer.entities.remove(trailPolyline);
+                        trailPolyline = null;
+                    }
+                    totalDistance = 0;
                     updateInfoBox(`
                         <strong>Last Point Removed.</strong><br>
                         <strong>Total Trail Distance:</strong> ${totalDistance.toFixed(2)} meters
                     `);
                 } else {
-                    // No points left
+                    // No points left, remove polyline if exists and reset distance
                     if (trailPolyline) {
                         viewer.entities.remove(trailPolyline);
                         trailPolyline = null;
