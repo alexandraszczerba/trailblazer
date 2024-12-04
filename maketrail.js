@@ -1,7 +1,7 @@
 // maketrail.js
 
 /**
- * Initializes the 3D Map with trail creation functionality.
+ * Initializes the 3D Map with trail creation.
  * @param {Cesium.Viewer} viewer - The Cesium Viewer instance.
  */
 export function initialize3DMap(viewer) {
