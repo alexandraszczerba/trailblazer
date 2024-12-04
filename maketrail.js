@@ -26,12 +26,13 @@ export function initialize3DMap(viewer) {
         }
     }
 
+    // Shared arrays to keep track of trail points and entities
+    const activeTrailPoints = [];
+    const pointEntities = [];
+    let trailPolyline = null;
+
     // Initialize trail creation
     function createTrail() {
-        const activeTrailPoints = [];
-        const pointEntities = [];
-        let trailPolyline = null;
-
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
         handler.setInputAction(async function (click) {
@@ -85,8 +86,8 @@ export function initialize3DMap(viewer) {
 
                         // Calculate distance between last two points
                         const lastIndex = activeTrailPoints.length - 1;
-                        const point1 = Cesium.Cartographic.toCartesian(Cesium.Cartographic.fromCartesian(activeTrailPoints[lastIndex - 1]));
-                        const point2 = Cesium.Cartographic.toCartesian(Cesium.Cartographic.fromCartesian(activeTrailPoints[lastIndex]));
+                        const point1 = Cesium.Cartesian3.clone(activeTrailPoints[lastIndex - 1]);
+                        const point2 = Cesium.Cartesian3.clone(activeTrailPoints[lastIndex]);
                         const distance = Cesium.Cartesian3.distance(point1, point2);
 
                         // Update the info box with elevation and distance
@@ -112,7 +113,7 @@ export function initialize3DMap(viewer) {
         // Destroy the handler on double-click to finalize trail creation
         handler.setInputAction(function () {
             handler.destroy();
-            updateInfoBox("Trail creation finalized. You can start a new trail by clicking the 'Create Trail' button.");
+            updateInfoBox("Trail creation finalized. You can use 'Undo' or 'Reset' buttons.");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
@@ -135,16 +136,11 @@ export function initialize3DMap(viewer) {
         const undoBtn = document.getElementById('undoBtn');
         const resetBtn = document.getElementById('resetBtn');
 
-        // Arrays to keep track of trail points and entities
-        const activeTrailPoints = [];
-        const pointEntities = [];
-        let trailPolyline = null;
-
         if (undoBtn) {
             undoBtn.addEventListener('click', function () {
                 if (activeTrailPoints.length > 0) {
                     // Remove last point
-                    const lastPoint = activeTrailPoints.pop();
+                    activeTrailPoints.pop();
                     const lastEntity = pointEntities.pop();
                     viewer.entities.remove(lastEntity);
 
@@ -158,6 +154,9 @@ export function initialize3DMap(viewer) {
 
                     // Update info box
                     if (activeTrailPoints.length > 0) {
+                        const lastIndex = activeTrailPoints.length - 1;
+                        // For simplicity, update info box with last point elevation
+                        // You can enhance this to store elevations per point
                         updateInfoBox("Last point removed.");
                     } else {
                         updateInfoBox("All points removed.");
